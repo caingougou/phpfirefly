@@ -1,7 +1,7 @@
 <?php
-include_once(FIREFLY_LIB_DIR . DS . 'view' . DS . 'view.php');
+require_once('controller' . DS . 'controller.php');
 
-class ApplicationController {
+class ApplicationController extends Controller {
 
 }
 ?>
