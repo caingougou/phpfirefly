@@ -1,8 +1,11 @@
 <?php
-/*
- * Created on Dec 12, 2008
- *
- * To change the template for this generated file go to
- * Window - Preferences - PHPeclipse - PHP - Code Templates
- */
+
+// current environment: development, test and production
+define('ENVIRONMENT', 'development');
+
+
+include_once ("environments" . DIRECTORY_SEPARATOR . ENVIRONMENT . ".php");
+
+// application boot setting.
+include_once ("boot.php");
 ?>

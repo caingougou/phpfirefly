@@ -3,5 +3,5 @@
 
 	RewriteCond %{REQUEST_FILENAME} !-f
 	RewriteCond %{REQUEST_FILENAME} !-d
-	RewriteRule (.*) dispatch.php?path=$1 [QSA,L]
+	RewriteRule ^(.*)$ dispatch.php?path=$1 [QSA,L]
 </IfModule>

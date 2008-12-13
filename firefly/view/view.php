@@ -1,8 +1,17 @@
 <?php
-/*
- * Created on Dec 12, 2008
- *
- * To change the template for this generated file go to
- * Window - Preferences - PHPeclipse - PHP - Code Templates
- */
+class View {
+
+	public function render($template, $params) {
+		ob_start();
+
+		$test = $params['test'];
+
+		include($template);
+
+		$out = ob_get_clean();
+
+		echo $out;
+	}
+
+}
 ?>
