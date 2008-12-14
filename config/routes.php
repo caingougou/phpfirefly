@@ -1,6 +1,4 @@
 <?php
-
-
 /**
  * routes map config.
  * array_keys list below:

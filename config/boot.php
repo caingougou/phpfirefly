@@ -11,12 +11,15 @@ define('FIREFLY_LIB_DIR', FIREFLY_BASE_DIR . DS . 'firefly');
 define('FIREFLY_APP_DIR', FIREFLY_BASE_DIR . DS . 'app');
 define('APP_LIB_DIR', FIREFLY_BASE_DIR . DS . 'lib');
 
-
 session_start();
 set_include_path(get_include_path() . PATH_SEPARATOR . FIREFLY_LIB_DIR);
 
+// globals functions
 include_once (FIREFLY_LIB_DIR . DS . 'functions.php');
+include_once (FIREFLY_LIB_DIR . DS . 'router.php');
+include_once(FIREFLY_BASE_DIR . DS . 'config' . DS . 'routes.php');
 include_once (FIREFLY_LIB_DIR . DS . 'controller' . DS . 'controller.php');
+
 
 /**
  * auto include app controllers/models/helpers class files.

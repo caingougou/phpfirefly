@@ -1,6 +1,4 @@
 <?php
-
-
 /**
  * The routing module provides URL rewriting.
  * It's a way to redirect incoming requests to controllers and actions.
@@ -19,8 +17,6 @@
  * PUT Editing of attributes on a resource.
  * DELETE Deletion of a resource
  */
-
-include_once(FIREFLY_BASE_DIR . DS . 'config' . DS . 'routes.php');
 
 class Router {
 	/**

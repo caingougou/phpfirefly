@@ -1,6 +1,4 @@
 <?php
-include_once('router.php');
-
 class Dispatcher {
 
 	public function dispatch() {
