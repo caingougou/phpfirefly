@@ -7,30 +7,36 @@ class Mysql {
 
 	private function __construct() {}
 
-	public static function conn($host, $user, $pass, $db) {
+	/**
+	 * Singleton constructor
+	 */ 
+	public static function establish_connection($host, $username, $password, $database) {
 		if(self::$instance == null) {
 			self::$instance = new Mysql();
-			self::$conn = mysql_connect($host, $user, $pass);
-			mysql_select_db($db);
+			self::$conn = mysql_connect($host, $username, $password);
+			mysql_select_db($database);
 		}
 		return self::$instance;
 	}
 
 	public function execute($sql) {
-//		echo '<!--small>'.$sql.'</small><br/-->';
-//		echo $sql.'<br/>';
+		//debug_print_backtrace();
+		//echo $sql.'<br/>';
 		$rs = mysql_query($sql) or die(mysql_error());
 		return $rs;
 	}
 
 	public function fetch($rs) {
+		if(is_string($rs)) {
+			//echo $rs.'<br/>';
+			$rs = mysql_query($rs) or die(mysql_error());
+		}
 		return mysql_fetch_assoc($rs);
 	}
 
 	public function fetch_rows($rs) {
-//		echo $rs.'<br/>';
 		if(is_string($rs)) {
-			$rs = mysql_query($rs);
+			$rs = mysql_query($rs) or die(mysql_error());
 		}
 		$rows = array();
 		while(false !== $row = mysql_fetch_assoc($rs)) {

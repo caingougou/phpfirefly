@@ -2,7 +2,7 @@
 
 class Inflector {
 
-	function singular($str) {
+	public static function singular($str) {
 	    $str = strtolower(trim($str));
 	    $end = substr($str, -3);
 	    if ($end == 'ies') {
@@ -18,7 +18,7 @@ class Inflector {
 	    return $str;
 	}
 
-	function plural($str, $force = FALSE) {
+	public static function plural($str, $force = FALSE) {
 	    $str = strtolower(trim($str));
 	    $end = substr($str, -1);
 	    if ($end == 'y') {
@@ -33,13 +33,13 @@ class Inflector {
 	    return $str;
 	}
 
-	function camelize($str) {
+	public static function camelize($str) {
 		$str = 'x'.strtolower(trim($str));
 		$str = ucwords(preg_replace('/[\s_]+/', ' ', $str));
 		return substr(str_replace(' ', '', $str), 1);
 	}
 
-	function humanize($str) {
+	public static function humanize($str) {
 		return ucwords(preg_replace('/[_]+/', ' ', strtolower(trim($str))));
 	}
 

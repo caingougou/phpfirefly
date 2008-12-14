@@ -41,6 +41,10 @@ function __autoload($class_name) {
 	elseif(file_exists(FIREFLY_APP_DIR . DS . 'models' . DS . strtolower($class_name) . '.php')) {
 		// include app models
 		include_once(FIREFLY_APP_DIR . DS . 'models' . DS . strtolower($class_name) . '.php');
+		if($class_name != 'activerecords') {
+			//$tmp = new $class_name;
+			call_user_func(array($class_name, '_init'), $class_name); // becase of STATIC PROBLEMS in php versions below 5.3.0
+		}
 	}
 	elseif(file_exists(FIREFLY_LIB_DIR . DS . 'controller' . DS . strtolower($class_name) . '.php')) {
 		// include firefly controller lib
@@ -49,6 +53,10 @@ function __autoload($class_name) {
 	elseif(file_exists(FIREFLY_LIB_DIR . DS . 'model' . DS . strtolower($class_name) . '.php')) {
 		// include firefly model lib
 		include_once(FIREFLY_LIB_DIR . DS . 'model' . DS . strtolower($class_name) . '.php');
+	}
+	elseif(file_exists(FIREFLY_LIB_DIR . DS . 'model' . DS . 'database_adapters' . DS .strtolower($class_name) . '.php')) {
+		// include firefly database adapters lib
+		include_once(FIREFLY_LIB_DIR . DS . 'model' . DS . 'database_adapters' . DS .strtolower($class_name) . '.php');
 	}
 	elseif(file_exists(FIREFLY_LIB_DIR . DS . 'view' . DS . strtolower($class_name) . '.php')) {
 		// include firefly view lib

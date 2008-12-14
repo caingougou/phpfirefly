@@ -6,4 +6,5 @@ define("DEBUG", 2);
 
 // current environment: development, test and production
 define('ENVIRONMENT', 'development');
+
 ?>
