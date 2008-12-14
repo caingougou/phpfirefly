@@ -1,4 +1,6 @@
 <?php
+
+
 /**
  * routes map config.
  * array_keys list below:
@@ -30,26 +32,14 @@ $map['/articles/$year/$month/$day'] = array('controller' => 'articles', 'action'
 $map['/post/$action/$id'] = array('controller' => 'post', 'id' => '/\d{1,}/', 'defaults' => array('page' => 1, 'numbers' => 30));
 
 // route conditions for http restful request
-$map['/post/$id'] = array(
-						'get' => array('controller' => 'posts', 'action' => 'show'),
-						'post' => array('controller' => 'posts', 'action' => 'create_comment'),
-						'put' => array('controller' => 'posts', 'action' => 'update'),
-						'delete' => array('controller' => 'posts', 'action' => 'destroy')
-						);
+$map['/post/$id'] = array('get' => array('controller' => 'posts', 'action' => 'show'), 'post' => array('controller' => 'posts', 'action' => 'create_comment'), 'put' => array('controller' => 'posts', 'action' => 'update'), 'delete' => array('controller' => 'posts', 'action' => 'destroy'));
 
-// nested routes
-$map['user'] = array(
-					'/posts/$id' => array('controller' => 'posts', 'action' => 'show')
-					);
-
-// defaults route
+// default route
 $map['/$controller/$action/$id'] = array();
 
-// route for any path, specifying *[string] as part of a rule like
+// globbing route for any path, specifying *[string] as part of a rule like
 $map['*path'] = array('controller' => 'page', 'action' => 'path');
 $map['*'] = array('controller' => 'page', 'action' => 'anything');
 
-
-Router::map($map);
+Router :: map($map);
 ?>
-

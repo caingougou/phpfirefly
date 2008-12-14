@@ -47,7 +47,7 @@ class Router {
 
 		foreach($_GET as $key => $value) {
 			if($key == 'path') {
-				$parse_path = Router::to_params($params['path']);
+				$parse_path = Router :: to_params($params['path']);
 				// TODO, false
 				$rs = explode("/", $value);
 				$params['controller_name'] = $rs[0];
@@ -100,13 +100,50 @@ class Router {
 	*/
 	public static function to_params($path) {
 		$path = $path == '/' || $path == '' ? '/' : '/' . $path;
+		foreach(Router :: $map as $key => $value) {
+			if($key == 'resources') {
+				// resources parse
+				$resources = new Resources($value);
+			}
+			elseif(preg_match('/^\*\w*$/', $key)) {
+				// globbing route
+				Router :: globbing($key, $value);
+			}
+			elseif(in_array('get', array_keys($value)) || in_array('post', array_keys($value)) || in_array('put', array_keys($value)) || in_array('delete', array_keys($value))) {
+				// restful conditions route
+				Router :: restful($key, $value);
+			}
+			elseif(preg_match('/^\w+$/', $key)) {
+				// named route
+				Router :: named($key, $value);
+			} else {
+				Router :: routing($key, $value);
+			}
+		}
 
-		pr($path);
+		pr("path = " . $path);
+
 		return false;
 	}
 
+	public static function globbing($key, $value) {
+//		pr($value);
+	}
+
+	public static function restful($key, $value) {
+//		pr($value);
+	}
+
+	public static function named($key, $value) {
+//		pr($value);
+	}
+
+	public static function routing($key, $value) {
+//		pr($value);
+	}
+
 	public static function map($map) {
-		//pr($map);
+//		pr($map);
 		Router :: $map = $map;
 	}
 

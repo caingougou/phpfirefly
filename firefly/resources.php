@@ -1,11 +1,11 @@
 <?php
-/**
- * Created on Dec 14, 2008
- *
- * phpfirefly web mvc framework.
- */
+class Resources {
+	private $map = array();
 
- class Resources {
+	public function __construct($map) {
+		$this->map = $map;
+//		pr($map);
+	}
 
- }
+}
 ?>

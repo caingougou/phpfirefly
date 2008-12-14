@@ -1,5 +1,5 @@
 <?php
-include_once ('router.php');
+include_once('router.php');
 
 class Dispatcher {
 
@@ -11,17 +11,17 @@ class Dispatcher {
 
 		$controller->before_filter();
 		$controller->view = new View($controller);
-		call_user_func(array ( $controller, $params['action_name'] ));
-		if($controller->auto_render){
+		call_user_func(array($controller, $params['action_name']));
+		if($controller->auto_render) {
 			$controller->render();
 		}
 		$controller->after_filter();
 	}
 
 	private function get_params() {
-		// parse router, strategy pattern.
 		$params = Router :: parse();
 		return $params;
 	}
+
 }
 ?>
