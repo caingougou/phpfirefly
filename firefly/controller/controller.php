@@ -11,10 +11,12 @@ class Controller {
 		preg_match('/(\w+)Controller/i', get_class($this), $match);
 		$this->controller_name = $match[1];
 
-		if (is_subclass_of($this, 'ApplicationController')) {
+		if(is_subclass_of($this, 'ApplicationController')) {
 			$application_vars = get_class_vars('ApplicationController');
-
-			if (isset ($application_vars['helper']) && !empty ($application_vars['helper']) && is_array($this->helper)) {
+			if(!is_array($this->helper)) {
+				$this->helper = array($this->helper);
+			}
+			if(isset($application_vars['helper']) && !empty($application_vars['helper'])) {
 				$diff = array_diff($application_vars['helper'], $this->helper);
 				$this->helper = array_merge($this->helper, $diff);
 			}
@@ -22,19 +24,19 @@ class Controller {
 	}
 
 	public function set($key, $value = null) {
-		if (is_array($key)) {
+		if(is_array($key)) {
 			$this->set_view_vars($key);
 		} else {
-			$this->set_view_vars(array ( $key => $value ));
+			$this->set_view_vars(array($key => $value));
 		}
 	}
 
 	private function set_view_vars($data) {
-		foreach ($data as $key => $value) {
-			if ($key == 'title') {
+		foreach($data as $key => $value) {
+			if($key == 'title') {
 				$this->set_page_title($value);
 			} else {
-				$this->view->{$key} = $value;
+				$this->view-> { $key } = $value;
 			}
 		}
 	}

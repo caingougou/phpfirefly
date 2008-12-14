@@ -1,8 +1,6 @@
 <?php
-
-
 /**
- * Boot.php
+ * boot.php
  *
  * define application constants
  */
@@ -16,6 +14,7 @@ define('APP_LIB_DIR', FIREFLY_BASE_DIR . DS . 'lib');
 set_include_path(get_include_path() . PATH_SEPARATOR . FIREFLY_LIB_DIR);
 
 include_once (FIREFLY_LIB_DIR . DS . 'functions.php');
+include_once (FIREFLY_LIB_DIR . DS . 'controller' . DS . 'controller.php');
 
 /**
  * auto include app controllers/models/helpers class files.
