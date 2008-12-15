@@ -16,7 +16,7 @@ $map = array();
 
 // named routes
 $map['root'] = array('controller' => 'page');
-$map['login'] = array('controller' => 'page', 'action' => 'login');
+$map['login'] = array('controller' => 'test', 'action' => 'test');
 $map['logout'] = array('controller' => 'page', 'action' => 'logout');
 
 // defining RESTful resources and nested resources
@@ -36,7 +36,7 @@ $map['/post/$id'] = array('get' => array('controller' => 'posts', 'action' => 's
 $map['/$controller/$action/$id'] = array();
 
 // globbing route for any path, specifying *[string] as part of a rule like
-$map['*path'] = array('controller' => 'page', 'action' => 'path');
+$map['*path'] = array('controller' => 'page', 'action' => 'any_path');
 $map['*'] = array('controller' => 'page', 'action' => 'anything');
 
 Router :: map($map);

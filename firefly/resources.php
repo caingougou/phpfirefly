@@ -7,5 +7,10 @@ class Resources {
 //		pr($map);
 	}
 
+	public function parse(){
+		// parse $this->map;
+		return false;
+	}
+
 }
 ?>

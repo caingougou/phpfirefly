@@ -8,8 +8,7 @@ class Controller {
 	public $auto_render = true;
 
 	public function __construct() {
-		preg_match('/(\w+)Controller/i', get_class($this), $match);
-		$this->controller_name = $match[1];
+		// preg_match('/(\w+)Controller/i', get_class($this), $match);
 
 		if(is_subclass_of($this, 'ApplicationController')) {
 			$application_vars = get_class_vars('ApplicationController');
@@ -36,7 +35,9 @@ class Controller {
 			if($key == 'title') {
 				$this->set_page_title($value);
 			} else {
-				$this->view-> { $key } = $value;
+				$this->view-> {
+					$key }
+				= $value;
 			}
 		}
 	}
@@ -45,21 +46,44 @@ class Controller {
 		$this->page_title = $title;
 	}
 
+	public function redirect_to($url) {
+		header($url);
+	}
+
+	/**
+	 * ajax
+	 * patial
+	 * file
+	 * inline code
+	 * text
+	 * 404
+	 * blank
+	 * layout
+	 */
 	public function render($info = null) {
 		$this->auto_render = false;
 		$this->before_render();
 
 		$response = $this->view->render($info);
+
+		$this->after_render();
 		echo $response;
 	}
 
-	function before_filter() {
+	public function before_filter() {
 	}
 
-	function before_render() {
+	public function before_render() {
 	}
 
-	function after_filter() {
+	public function after_render() {
+	}
+
+	public function after_filter() {
+	}
+
+	public function method_missing($params) {
+		$this->render(FIREFLY_LIB_DIR . DS . 'view' . DS . 'method_missing.php');
 	}
 }
 ?>
