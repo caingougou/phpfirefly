@@ -1,5 +1,6 @@
 <?php
 
+
 /**
  * boot.php
  *
@@ -14,10 +15,8 @@ define('FIREFLY_LIB_DIR', FIREFLY_BASE_DIR . DS . 'firefly');
 define('FIREFLY_APP_DIR', FIREFLY_BASE_DIR . DS . 'app');
 define('APP_LIB_DIR', FIREFLY_BASE_DIR . DS . 'lib');
 
-// 0. production, 1. development sql and controller object inspect.
-define("DEBUG", 1);
-
 session_start();
+
 set_include_path(get_include_path() . PATH_SEPARATOR . FIREFLY_LIB_DIR);
 
 // globals functions

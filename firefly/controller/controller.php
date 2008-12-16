@@ -8,7 +8,7 @@ class Controller {
 	public $auto_render = true;
 
 	public function __construct() {
-		// preg_match('/(\w+)Controller/i', get_class($this), $match);
+		// preg_match('/(\w+)Controller/i', get_class($this), $match); // for check $match[1] == $params['controller']
 
 		if(is_subclass_of($this, 'ApplicationController')) {
 			$application_vars = get_class_vars('ApplicationController');
