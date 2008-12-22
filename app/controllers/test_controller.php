@@ -1,10 +1,10 @@
 <?php
 class TestController extends ApplicationController {
 	public function index() {
-		$user = User :: find(1);
-		$first_post = Post :: find(1);
-		pr($user);
-		pr($first_post);
+//		$user = User :: find(1);
+//		$first_post = Post :: find(1);
+//		pr($user);
+//		pr($first_post);
 		//pr($user->posts[1]->title);
 		//$post = new Post();
 		//$post->title = 'test';
@@ -33,6 +33,7 @@ class TestController extends ApplicationController {
 		//}
 
 		$this->set('action', __METHOD__);
+		$this->warn("self", __FILE__, __LINE__);
 	}
 }
 ?>

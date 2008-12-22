@@ -105,5 +105,9 @@ class Controller {
 	public function method_missing($params) {
 		$this->render(FIREFLY_LIB_DIR . DS . 'view' . DS . 'method_missing.php');
 	}
+
+	public function __toString() {
+		return get_class($this);
+	}
 }
 ?>

@@ -46,7 +46,7 @@ class Router {
 
 		foreach($_GET as $key => $value) {
 			if($key == 'path') {
-				$path_params = Router :: to_params($params['path']);
+				$path_params = self :: to_params($params['path']);
 				pr($path_params);
 				//TODO
 
@@ -73,11 +73,11 @@ class Router {
 	 * You can reload routes if you feel you must
 	 */
 	public static function reload() {
-		Router :: $routes = array();
+		self :: $routes = array();
 	}
 
 	public static function get_routes() {
-		return Router :: $routes;
+		return self :: $routes;
 	}
 
 	/**
@@ -104,7 +104,7 @@ class Router {
 	public static function to_params($path) {
 		$path = $path == '/' || $path == '' ? '/' : '/' . $path;
 		pr("path = " . $path);
-		foreach(Router :: $map as $key => $value) {
+		foreach(self :: $map as $key => $value) {
 			if($key == 'resources') {
 				// resources parse
 				$resources = new Resources($path, $value);
@@ -112,24 +112,23 @@ class Router {
 			}
 			elseif(preg_match('/^\*\w*$/', $key)) {
 				// globbing route
-				$params = Router :: globbing($path, $key, $value);
+				$params = self :: globbing($path, $key, $value);
 			}
 			elseif(in_array('get', array_keys($value)) || in_array('post', array_keys($value)) || in_array('put', array_keys($value)) || in_array('delete', array_keys($value))) {
 				// restful conditions route
-				$params = Router :: restful($path, $key, $value);
+				$params = self :: restful($path, $key, $value);
 			}
 			elseif(preg_match('/^\w+$/', $key)) {
 				// named route
-				$params = Router :: named($path, $key, $value);
+				$params = self :: named($path, $key, $value);
 			} else {
 				// variables route
-				$params = Router :: routing($path, $key, $value);
+				$params = self :: routing($path, $key, $value);
 			}
 			if($params) {
 				return $params;
 			}
 		}
-
 
 		return array();
 	}
@@ -166,7 +165,7 @@ class Router {
 
 	public static function map($map) {
 		//		pr($map);
-		Router :: $map = $map;
+		self :: $map = $map;
 	}
 
 }
