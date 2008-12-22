@@ -19,8 +19,9 @@ session_start();
 
 set_include_path(get_include_path() . PATH_SEPARATOR . FIREFLY_LIB_DIR);
 
-// globals functions
+// globals functions, will be removed.
 include_once(FIREFLY_LIB_DIR . DS . 'functions.php');
+
 include_once(FIREFLY_LIB_DIR . DS . 'router.php');
 include_once(FIREFLY_BASE_DIR . DS . 'config' . DS . 'routes.php');
 include_once(FIREFLY_LIB_DIR . DS . 'controller' . DS . 'controller.php');
@@ -43,7 +44,8 @@ function __autoload($class_name) {
 		include_once(FIREFLY_APP_DIR . DS . 'models' . DS . strtolower($class_name) . '.php');
 		if($class_name != 'activerecords') {
 			//$tmp = new $class_name;
-			call_user_func(array($class_name, '_init'), $class_name); // becase of STATIC PROBLEMS in php versions below 5.3.0
+			// because of STATIC PROBLEMS in php versions below 5.3.0
+			call_user_func(array($class_name, '_init'), $class_name);
 		}
 	}
 	elseif(file_exists(FIREFLY_LIB_DIR . DS . 'controller' . DS . strtolower($class_name) . '.php')) {

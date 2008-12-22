@@ -5,10 +5,18 @@ class Controller {
 	public $helper;
 	public $layout;
 	public $page_title;
+
+	public $logger;
+	public $request;
+	public $response;
 	public $auto_render = true;
 
 	public function __construct() {
 		// preg_match('/(\w+)Controller/i', get_class($this), $match); // for check $match[1] == $params['controller']
+		// constructor inject
+		$this->logger = new Logger();
+		$this->request = new Request();
+		$this->response = new Response();
 
 		if(is_subclass_of($this, 'ApplicationController')) {
 			$application_vars = get_class_vars('ApplicationController');
@@ -20,6 +28,18 @@ class Controller {
 				$this->helper = array_merge($this->helper, $diff);
 			}
 		}
+	}
+
+	public function debug($object, $file_name = __FILE__, $line = __LINE__) {
+		$this->logger->debug($object, $file_name, $line);
+	}
+
+	public function warn($warn, $file_name = __FILE__, $line = __LINE__) {
+		$this->logger->warn($warn, $file_name, $line);
+	}
+
+	public function info($info, $file_name = __FILE__, $line = __LINE__) {
+		$this->logger->info($info, $file_name, $line);
 	}
 
 	public function set($key, $value = null) {

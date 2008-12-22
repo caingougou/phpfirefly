@@ -1,8 +1,8 @@
 <?php
-class TestController extends ApplicationController{
-	public function index(){
-		$user = User::find(1);
-		$first_post = Post::find(1);
+class TestController extends ApplicationController {
+	public function index() {
+		$user = User :: find(1);
+		$first_post = Post :: find(1);
 		pr($user);
 		pr($first_post);
 		//pr($user->posts[1]->title);
@@ -28,8 +28,8 @@ class TestController extends ApplicationController{
 		//pr($post_count3);
 		//echo User::count();
 		//if(User::count() == 0) {
-			//$user = new User();
-			//$user->save(array('name' => 'admin', 'password' => md5('admin')));
+		//$user = new User();
+		//$user->save(array('name' => 'admin', 'password' => md5('admin')));
 		//}
 
 		$this->set('action', __METHOD__);

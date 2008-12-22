@@ -37,7 +37,7 @@ class Dispatcher {
 		$controller->after_filter();
 
 		// debug controller info
-		debug($controller);
+		$controller->debug($controller);
 	}
 
 	private function get_params() {
