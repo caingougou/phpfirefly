@@ -6,7 +6,7 @@
  */
 function pr($object) {
 	echo '<div style="white-space:pre;">';
-	print_r($object);
+	var_dump($object);
 	echo '</div>';
 }
 

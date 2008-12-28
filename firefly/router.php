@@ -28,44 +28,9 @@ class Router {
 	private static $map = array();
 	private static $regexp = '/^\/.+\/[imsxe]*$/';
 
-	public static function parse() {
-		$params = array();
-		$params['path'] = $_GET['path'];
-		$params['form'] = $_POST;
-
-		// file uploader
-		foreach($_FILES as $name => $data) {
-			$params['form'][$name] = $data;
-		}
-
-		// hack HTTP PUT/DELETE methods for restful request.
-		if(isset($params['form']['_method'])) {
-			$_SERVER['REQUEST_METHOD'] = $params['form']['_method'];
-			unset($params['form']['_method']);
-		}
-
-		foreach($_GET as $key => $value) {
-			if($key == 'path') {
-				$path_params = self :: to_params($params['path']);
-				pr($path_params);
-				//TODO
-
-				$rs = explode("/", $value);
-				$params['controller'] = $rs[0];
-				$params = array_merge($params, $path_params);
-
-				pr($params);
-			} else {
-				$params[$key] = $value;
-			}
-		}
-
-		if(empty($params['action'])) {
-			$params['action'] = 'index';
-		}
-
-		//		pr($params);
-		return $params;
+	public static function recognize($path = '') {
+		$path = $path ? $path : $_GET['path'];
+		return self :: to_params($path);
 	}
 
 	/**
@@ -103,7 +68,6 @@ class Router {
 	*/
 	public static function to_params($path) {
 		$path = $path == '/' || $path == '' ? '/' : '/' . $path;
-		pr("path = " . $path);
 		foreach(self :: $map as $key => $value) {
 			if($key == 'resources') {
 				// resources parse
@@ -126,6 +90,8 @@ class Router {
 				$params = self :: routing($path, $key, $value);
 			}
 			if($params) {
+				// TODO: append defaults parameters to params.
+			    $params = array_merge($params, self :: defaults_params());
 				return $params;
 			}
 		}
@@ -134,12 +100,10 @@ class Router {
 	}
 
 	public static function globbing($path, $key, $value) {
-		//		pr($value);
 		return false;
 	}
 
 	public static function restful($path, $key, $value) {
-		//		pr($value);
 		return false;
 	}
 
@@ -160,12 +124,18 @@ class Router {
 	 */
 	public static function routing($path, $key, $value) {
 		//		pr($value);
+		if(true) {
+			return array('controller' => 'test');
+		}
 		return false;
 	}
 
 	public static function map($map) {
-		//		pr($map);
 		self :: $map = $map;
+	}
+
+	public static function defaults_params(){
+		return array();
 	}
 
 }

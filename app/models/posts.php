@@ -5,7 +5,7 @@
  * To change the template for this generated file go to
  * Window - Preferences - PHPeclipse - PHP - Code Templates
  */
-class Post extends ActiveRecord {
+class Posts extends ActiveRecord {
 
 }
 ?>

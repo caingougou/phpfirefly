@@ -14,7 +14,7 @@ class Logger {
 	}
 
 	public function warn($msg, $file_name = null, $line = 0) {
-		$this->log(__FUNCTION__, $msg, $file_name, $line, "red");
+		$this->log(__FUNCTION__, $msg, $file_name, $line, "light_red");
 	}
 
 	public function info($info, $file_name = null, $line = 0) {
@@ -30,7 +30,7 @@ class Logger {
 			return $text;
 		}
 
-		$colors = array('light_red ' => '[1;31m', 'light_green' => '[1;32m', 'yellow' => '[1;33m', 'light_blue' => '[1;34m', 'magenta' => '[1;35m', 'light_cyan' => '[1;36m', 'white' => '[1;37m', 'normal' => '[0m', 'black' => '[0;30m', 'red' => '[0;31m', 'green' => '[0;32m', 'brown' => '[0;33m', 'blue' => '[0;34m', 'cyan' => '[0;36m', 'bold' => '[1m', 'underscore' => '[4m', 'reverse' => '[7m');
+		$colors = array('light_red' => '[1;31m', 'light_green' => '[1;32m', 'yellow' => '[1;33m', 'light_blue' => '[1;34m', 'magenta' => '[1;35m', 'light_cyan' => '[1;36m', 'white' => '[1;37m', 'normal' => '[0m', 'black' => '[0;30m', 'red' => '[0;31m', 'green' => '[0;32m', 'brown' => '[0;33m', 'blue' => '[0;34m', 'cyan' => '[0;36m', 'bold' => '[1m', 'underscore' => '[4m', 'reverse' => '[7m');
 		return "\033" .(isset($colors[$color]) ? $colors[$color] : '[0m') . $text . "\033[0m";
 	}
 
@@ -50,9 +50,9 @@ class Logger {
 
 	private function log_start($level) {
 		if(LOG_LOCATION == 'page') {
-			if($level == 'debug'){
-				echo '<div onclick="javascript:(function(div){var display=div.childNodes[2].style.display;div.childNodes[2].style.display=(display==\'block\'?\'none\':\'block\')})(this);"><a href="#">debug</a><br />';
-				echo '<div style="white-space:pre; display:none; color:magenta;">';
+			if($level == 'debug') {
+				echo '<div onclick="javascript:(function(div){div.childNodes[2].style.display=(div.childNodes[2].style.display==\'block\'?\'none\':\'block\')})(this);"><a href="#">debug</a><br />';
+				echo '<div style="white-space:pre; display:none; color:magenta; border:#ddd 1px solid;">';
 			} else {
 				echo '<div style="color:red; font-weight:bold;"><div>';
 			}
@@ -84,8 +84,8 @@ class Logger {
 	}
 
 	private function log($level, $msg, $file_name, $line, $color = 'normal') {
+		// Output buffers are stackable
 		ob_start();
-
 		if(DEBUG) {
 			$this->log_start($level);
 			$this->caller($file_name, $line);
@@ -100,7 +100,6 @@ class Logger {
 			}
 			$this->log_end($level);
 		}
-
 		$out = ob_get_clean();
 		$this->output($out);
 	}
