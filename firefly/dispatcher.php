@@ -6,13 +6,9 @@ class Dispatcher {
 	private $controller;
 
 	public function dispatch() {
-		//ob_start('ob_gzhandler');
-		ob_start();
-		$this->request = new Request();
-		$this->response = new Response();
+		$this->request = new Request;
+		$this->response = new Response;
 		$this->process();
-		$body = ob_get_clean();
-		echo $body;
 	}
 
 	private function process() {
@@ -20,7 +16,7 @@ class Dispatcher {
 		$this->params = $this->request->parameters();
 
 		$class_name = $this->params['controller'] . "Controller";
-		$this->controller = new $class_name();
+		$this->controller = new $class_name;
 		$this->controller->params = $this->params;
 		$this->controller->request = $this->request;
 		$this->controller->response = $this->response;

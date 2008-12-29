@@ -1,34 +1,39 @@
 <?php
-class Session {
+require 'sessions/session_interface.php';
+
+class Session implements SessionInterface {
 	/**
 	 * Memcache based session.
 	 *
 	 * This class enables saving sessions into a database or memcache.
 	 * This can be usefull for multiple server sites, and to have more control over sessions.
 	 */
-	private $type;
-
-	private function __construct($type) {
+	private function __construct() {
 	}
 
-	public static function factory($type = 0) {
-		if($type) {
+	public static function factory($type = 'default') {
+		if($type == 'default') {
+			$classname = __CLASS__;
+			return new $classname; // $_SESSION;
+		} else {
+			if(include_once 'sessions/session_' . $type . '.php') {
+				$classname = 'session' . $type;
+				return new $classname;
+			} else {
+				trigger_error('Can not find session strategy: ' . $type, E_USER_WARNING);
+			}
 			$class = __CLASS__;
 			$session = new $class($type);
 			$session->type = $type;
 			return $session;
-		} else {
-			return $_SESSION;
 		}
 	}
 
 	public function get($key) {
-		// TODO
 		return $_SESSION[$key];
 	}
 
 	public function set($key, $value) {
-		// TODO
 		$_SESSION[$key] = $value;
 	}
 

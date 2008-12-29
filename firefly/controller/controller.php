@@ -16,7 +16,7 @@ class Controller {
 	private $template_root;
 
 	public function __construct() {
-		$this->logger = new Logger();
+		$this->logger = new Logger;
 		$this->session = Session :: factory(SESSION_STORE_STRATEGY);
 		$this->template_root = FIREFLY_APP_DIR . DS . 'views' . DS;
 
