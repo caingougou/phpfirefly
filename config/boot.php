@@ -14,16 +14,14 @@ define('FIREFLY_BASE_DIR', str_replace(DS . 'config' . DS . 'boot.php', '', __FI
 define('FIREFLY_LIB_DIR', FIREFLY_BASE_DIR . DS . 'firefly');
 define('FIREFLY_APP_DIR', FIREFLY_BASE_DIR . DS . 'app');
 define('APP_LIB_DIR', FIREFLY_BASE_DIR . DS . 'lib');
+define('FIREFLY_VENDOR_DIR', FIREFLY_BASE_DIR . DS . 'vendor');
 
-session_start();
-
-set_include_path(get_include_path() . PATH_SEPARATOR . FIREFLY_LIB_DIR);
+set_include_path(get_include_path() . PATH_SEPARATOR . FIREFLY_LIB_DIR . PATH_SEPARATOR . FIREFLY_VENDOR_DIR);
 
 // globals functions, will be removed.
 include_once(FIREFLY_LIB_DIR . DS . 'functions.php');
 
 include_once(FIREFLY_LIB_DIR . DS . 'router.php');
-include_once(FIREFLY_BASE_DIR . DS . 'config' . DS . 'routes.php');
 include_once(FIREFLY_LIB_DIR . DS . 'controller' . DS . 'controller.php');
 
 /**

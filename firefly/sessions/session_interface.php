@@ -1,7 +1,10 @@
 <?php
 interface SessionInterface {
-	function get($key);
-	function set($key, $value);
-	function reset();
+	public function open();
+	public function close();
+	public function read();
+	public function write();
+	public function destroy();
+	public function gc();
 }
 ?>

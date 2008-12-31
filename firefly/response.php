@@ -2,7 +2,6 @@
 class Response {
 	public $headers = array();
 	public $assigns = array();
-	public $sessions = array();
 	public $layout = null;
 	public $template = null;
 	public $content = null;
@@ -131,10 +130,14 @@ class Response {
 		header('Content-Disposition: attachment; filename=' . $filename . ';');
 		header('Content-Transfer-Encoding: binary');
 		header('Content-Length: ' . $len);
+		// header("Cache-control: private"); // fix a bug in IE 6.x
 		$this->set_content_type_by_extension($extension);
 		readfile($file);
 	}
 
+	/**
+	 * TODO: plugin views
+	 */
 	public function output() {
 		foreach($this->headers as $header) {
 			header($header);

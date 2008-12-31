@@ -1,5 +1,5 @@
 <?php
-
+include_once('routing/route_set.php');
 
 /**
  * The routing module provides URL rewriting.
@@ -19,123 +19,36 @@
  * PUT Editing of attributes on a resource.
  * DELETE Deletion of a resource
  */
-
 class Router {
-	/**
-	* routes setting container
-	*/
-	private static $routes = array();
 	private static $map = array();
 	private static $regexp = '/^\/.+\/[imsxe]*$/';
 
-	public static function recognize($path = '') {
-		$path = $path ? $path : $_GET['path'];
-		return self :: to_params($path);
+	public static function recognize($request) {
+		$route_set = new RouteSet;
+		return $route_set->recognize_path($request->path);
 	}
 
 	/**
-	 * Reloading routes
-	 * You can reload routes if you feel you must
+	 * Returns the array of controller names currently available to router
 	 */
-	public static function reload() {
-		self :: $routes = array();
+	public static function available_controllers() {
+		return array('test', 'posts');
 	}
 
-	public static function get_routes() {
-		return self :: $routes;
-	}
-
-	/**
-	* Router::to_url(array('controller' => 'user','action' => 'list','id' => '12'));
-	* Produces: /user/list/12
-	*/
-	public static function to_url($params = array()) {
-		$cache_key = md5(serialize($params));
-		if(!isset($routes[$cache_key])) {
-			$parsed = isset($params['prefix']) ? '/' . $params['prefix'] : '';
-			$parsed .= '/' . $params['controller_name'] . '/' . $params['action_name'];
-			$parsed .= isset($params['id']) ? '/' . $params['id'] : '';
-			$routes[$cache_key] = $parsed;
-		}
-		return $routes[$cache_key];
+	public static function available_actions_by_controller($controller) {
+		return get_class_methods($controller);
 	}
 
 	/**
-	* Router::to_params('/blog/view/10/');
-	* Produces: array('controller'=>'post','action'=>'view','id'=>'10');
-	*
-	* This function returns false in case no rule is found for selected URL
-	*/
-	public static function to_params($path) {
-		$path = $path == '/' || $path == '' ? '/' : '/' . $path;
-		foreach(self :: $map as $key => $value) {
-			if($key == 'resources') {
-				// resources parse
-				$resources = new Resources($path, $value);
-				$params = $resources->parse();
-			}
-			elseif(preg_match('/^\*\w*$/', $key)) {
-				// globbing route
-				$params = self :: globbing($path, $key, $value);
-			}
-			elseif(in_array('get', array_keys($value)) || in_array('post', array_keys($value)) || in_array('put', array_keys($value)) || in_array('delete', array_keys($value))) {
-				// restful conditions route
-				$params = self :: restful($path, $key, $value);
-			}
-			elseif(preg_match('/^\w+$/', $key)) {
-				// named route
-				$params = self :: named($path, $key, $value);
-			} else {
-				// variables route
-				$params = self :: routing($path, $key, $value);
-			}
-			if($params) {
-				// TODO: append defaults parameters to params.
-			    $params = array_merge($params, self :: defaults_params());
-				return $params;
-			}
-		}
-
-		return array();
-	}
-
-	public static function globbing($path, $key, $value) {
-		return false;
-	}
-
-	public static function restful($path, $key, $value) {
-		return false;
-	}
-
-	/**
-	 * $map['logout'] = array('controller' => 'page', 'action' => 'logout');
+	 * Returns normalized path, cleaned of double-slashes and relative path references.
+	 * "\\\" and "//"  become "\\" or "/".
+	 * "/foo/bar/../config" becomes "/foo/config".
 	 */
-	public static function named($path, $key, $value) {
-		if($path == '/' . $key || $path == '/' . $key . '/') {
-			return $value;
-		} else {
-			return false;
-		}
-	}
-
-	/**
-	 * if matched any rule, return params array()
-	 * else return false
-	 */
-	public static function routing($path, $key, $value) {
-		//		pr($value);
-		if(true) {
-			return array('controller' => 'test');
-		}
-		return false;
-	}
-
-	public static function map($map) {
-		self :: $map = $map;
-	}
-
-	public static function defaults_params(){
-		return array();
+	public static function normalize_path($path) {
+		$regexp = array('//', '\\\\', '(.)[\\/]$', '[^/\\]+[/\\]\.\.[/\\]');
+		$replace = array('/', '\\', '\1', '');
+		$path = preg_replace($regexp, $replace, $path);
+		return $path;
 	}
 
 }

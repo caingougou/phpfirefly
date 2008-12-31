@@ -23,10 +23,11 @@ class Request {
 		return $this->xml_http_request();
 	}
 
-	public function path_parameters(){
-		return Router :: recognize($this->path);
+	public function path_parameters() {
+		return Router :: recognize($this);
 	}
 
+	// Firstly merge POST and GET parameters in a single hash, then update hash by path parameters.
 	public function parameters() {
 		$params = array_merge($_POST, $_GET);
 		// hack HTTP PUT/DELETE methods for restful request.
@@ -41,10 +42,11 @@ class Request {
 		return $params;
 	}
 
-	public function get_format(){
+	public function get_format() {
 		if(!empty($_GET['format'])) {
 			$this->format = $_GET['format'];
-		} elseif (!empty($_POST['format'])){
+		}
+		elseif(!empty($_POST['format'])) {
 			$this->format = $_POST['format'];
 		} else {
 			$this->format = 'php';
