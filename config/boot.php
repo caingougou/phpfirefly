@@ -44,8 +44,9 @@ function __autoload($class_name) {
 		include_once(FIREFLY_APP_DIR . DS . 'models' . DS . strtolower($class_name) . '.php');
 		if($class_name != 'activerecords') {
 			//$tmp = new $class_name;
+			//$tmp->_init();
 			// because of STATIC PROBLEMS in php versions below 5.3.0
-			call_user_func(array($class_name, '_init'), $class_name);
+			//call_user_func(array($class_name, '_init'), $class_name);
 		}
 	}
 	elseif(file_exists(FIREFLY_LIB_DIR . DS . 'controller' . DS . strtolower($class_name) . '.php')) {
