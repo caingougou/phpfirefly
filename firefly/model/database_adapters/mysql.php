@@ -21,14 +21,14 @@ class Mysql {
 
 	public function execute($sql) {
 		//debug_print_backtrace();
-		//echo $sql.'<br/>';
+		echo $sql.'<br/>';
 		$rs = mysql_query($sql) or die(mysql_error());
 		return $rs;
 	}
 
 	public function fetch($rs) {
 		if(is_string($rs)) {
-			//echo $rs.'<br/>';
+			echo $rs.'<br/>';
 			$rs = mysql_query($rs) or die(mysql_error());
 		}
 		return mysql_fetch_assoc($rs);
