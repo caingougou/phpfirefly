@@ -21,7 +21,7 @@ class Controller {
 			if(!is_array($this->helper)) {
 				$this->helper = array($this->helper);
 			}
-			if(isset($application_vars['helper']) && !empty($application_vars['helper'])) {
+			if(!empty($application_vars['helper'])) {
 				$diff = array_diff($application_vars['helper'], $this->helper);
 				$this->helper = array_merge($this->helper, $diff);
 			}
@@ -60,7 +60,7 @@ class Controller {
 	public function after_filter() {
 	}
 
-	public function action_missing($params) {
+	public function action_missing() {
 		$this->render(array('file' => FIREFLY_LIB_DIR . DS . 'view' . DS . 'action_missing.php'));
 	}
 
@@ -209,7 +209,7 @@ class Controller {
 	}
 
 	private function render_for_file($file, $options = array()) {
-		pr($file);
+		$this->info($file, __FILE__, __LINE__);
 		if(file_exists($file) && preg_match('/^' . preg_quote(FIREFLY_BASE_DIR, '/') . '/', $file)) {
 			$this->response->template = $file;
 		} else {
@@ -287,7 +287,7 @@ class Controller {
 
 	private function set_response_assigns($locals) {
 		$vars = array_merge(get_object_vars($this), $locals);
-		$vars['response'] = null;
+		unset($vars['response']);
 		$this->response->assigns = $vars;
 	}
 

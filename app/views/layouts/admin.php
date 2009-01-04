@@ -7,11 +7,11 @@
     </head>
     <body>
         <p>
-            posts layout
+            admin layout
         </p>
         <?=$content_for_layout?>
         <p>
-            posts layout
+            admin layout
         </p>
     </body>
 </html>

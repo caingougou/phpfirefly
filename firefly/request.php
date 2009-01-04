@@ -6,7 +6,7 @@ class Request {
 	public $path = 'index.php';
 
 	public function __construct() {
-		$this->env = $_SERVER;
+		$this->env =& $_SERVER;
 		$this->path = $_GET['fireflypath'];
 		$this->get_format();
 	}
@@ -30,11 +30,12 @@ class Request {
 	// Firstly merge POST and GET parameters in a single hash, then update hash by path parameters.
 	public function parameters() {
 		$params = array_merge($_POST, $_GET);
-		// hack HTTP PUT/DELETE methods for restful request.
-		if(isset($params['form']['_method'])) {
-			$_SERVER['REQUEST_METHOD'] = $params['form']['_method'];
+		// hack HTTP PUT/DELETE methods, for http verb request.
+		if(isset($params['_method']) && in_array(strtoupper($params['_method']), array('GET', 'POST', 'PUT', 'DELETE'))) {
+			$_SERVER['REQUEST_METHOD'] = strtoupper($params['_method']);
+			unset($params['_method']);
 		}
-		$this->method = $_SERVER['REQUEST_METHOD'];
+		$this->method = strtolower($_SERVER['REQUEST_METHOD']);
 		$params = array_merge($params, $this->path_parameters());
 		if(empty($params['action'])) {
 			$params['action'] = 'index';

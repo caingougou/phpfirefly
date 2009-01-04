@@ -66,6 +66,5 @@ class TestController extends ApplicationController {
 		//		$this->render(array('partial' => 'posts/form'));
 		//		$this->render(array('partial' => 'posts/form', 'layout' => 'posts'));
 	}
-
 }
 ?>

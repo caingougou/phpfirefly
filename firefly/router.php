@@ -20,33 +20,49 @@ include_once('routing/route_set.php');
  * DELETE Deletion of a resource
  */
 class Router {
-	private static $map = array();
-	private static $regexp = '/^\/.+\/[imsxe]*$/';
+	private static $controllers = array();
 
 	public static function recognize($request) {
 		$route_set = new RouteSet;
 		return $route_set->recognize_path($request->path);
 	}
 
+	public static function recursive_glob($pattern = '*', $path = '') {
+		$path = preg_quote($path, DS); // prevend character '[', ']' etc in $path to cause glob return false
+		$paths = glob($path . '*', GLOB_MARK | GLOB_ONLYDIR | GLOB_NOSORT);
+		$files = glob($path . $pattern, GLOB_NOSORT);
+		foreach($paths as $path) {
+			$files = array_merge($files, self :: recursive_glob($pattern, $path));
+		}
+		return $files;
+	}
+
 	/**
 	 * Returns the array of controller names currently available to router
 	 */
 	public static function available_controllers() {
-		return array('test', 'posts');
-	}
-
-	public static function available_actions_by_controller($controller) {
-		return get_class_methods($controller);
+		$app_controllers_path = FIREFLY_APP_DIR . DS . 'controllers';
+		if(empty(self :: $controllers)) {
+			$files = self :: recursive_glob('*_controller.php', $app_controllers_path);
+			$regexp = '/^' . preg_quote($app_controllers_path . DS, DS) . '(.+)_controller.php' . '$/i';
+			foreach($files as $file) {
+				array_push(self :: $controllers, preg_replace($regexp, '\1', $file));
+			}
+		}
+		return self :: $controllers;
 	}
 
 	/**
 	 * Returns normalized path, cleaned of double-slashes and relative path references.
-	 * "\\\" and "//"  become "\\" or "/".
+	 * "//"  become "/".
+	 * remove "/" at begin of path when $path begin with "/".
+	 * remove '/' at end of $path if $path end with '/'.
 	 * "/foo/bar/../config" becomes "/foo/config".
 	 */
 	public static function normalize_path($path) {
-		$regexp = array('//', '\\\\', '(.)[\\/]$', '[^/\\]+[/\\]\.\.[/\\]');
-		$replace = array('/', '\\', '\1', '');
+		// $path = preg_replace('/^\/*(.*?)\/*$/', '/\1', $path);
+		$regexp = array('/^[\/]?(.)/', '/\/\//', '/(.)[\/]$/', '/[^\/]+[\/]\.\.[\/]/');
+		$replace = array('\1', '/', '\1', '');
 		$path = preg_replace($regexp, $replace, $path);
 		return $path;
 	}

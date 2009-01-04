@@ -1,0 +1,4 @@
+<?php
+	pr($params);
+    phpinfo();
+?>
