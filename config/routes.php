@@ -15,29 +15,41 @@
 $map = array();
 
 // named routes
-$map['root'] = array('controller' => 'page');
-$map['login'] = array('controller' => 'test', 'action' => 'test');
-$map['logout'] = array('controller' => 'page', 'action' => 'logout');
+$map['root'] = array('controller' => 'admin');
+$map['login'] = array('controller' => 'admin', 'action' => 'login');
+$map['logout'] = array('controller' => 'admin', 'action' => 'logout');
 
-// defining RESTful resources and nested resources
-$map['resources'] = array('clients', 'posts', 'users' => array('clients', 'posts'));
+// defining resources and nested resources.
+$map['resources'] = array('terms', 'options', 'links',
+	'posts' => array('add' => array('controller' => 'comments', 'action' => 'create_comment')), // named and other narmal route in resources.
+	'users' => array('terms', 'posts')); // nested resources
 
-// regular expressions and parameters
-$map['/blog/$id'] = array('controller' => 'post', 'action' => 'show', 'id' => '/\d{1,}/');
-$map['/articles/$year/$month/$day'] = array('controller' => 'articles', 'action' => 'find_by_date', 'year' => '/\d{4}/', 'month' => '/\d{1,2}/', 'day' => '/\d{1,2}/');
+// regular expressions and parameters for requirements routes.
+$map['/posts/:year/:month/:day'] = array('controller' => 'posts', 'action' => 'find_by_date', 'year' => '/\d{4}/', 'month' => '/\d{1,2}/', 'day' => '/\d{1,2}/');
 
 // you simply append a hash at the end of your mapping to set any default parameters.
-$map['/post/$action/$id'] = array('controller' => 'post', 'id' => '/\d{1,}/', 'defaults' => array('page' => 1, 'numbers' => 30));
+$map['/posts/:action/:id'] = array('controller' => 'posts', 'id' => '/\d{1,}/', 'defaults' => array('page' => 1, 'numbers' => 30));
 
-// route conditions for http restful request
-$map['/post/$id'] = array('get' => array('controller' => 'posts', 'action' => 'show'), 'post' => array('controller' => 'posts', 'action' => 'create_comment'), 'put' => array('controller' => 'posts', 'action' => 'update'), 'delete' => array('controller' => 'posts', 'action' => 'destroy'));
+// conditions route for http verb request.
+$map['/posts/:id'] = array(
+		array('controller' => 'posts', 'action' => 'show', 'id' => '/\d{1,}/', 'defaults' => array('page' => 1, 'numbers' => 30), 'conditions' => array('method' => 'get')),
+		array('controller' => 'posts', 'action' => 'create_comment', 'conditions' => array('method' => 'post')),
+		array('controller' => 'posts', 'action' => 'update', 'conditions' => array('method' => 'put')),
+		array('controller' => 'posts', 'action' => 'destroy', 'conditions' => array('method' => 'delete'))
+	);
 
-// default route
-$map['/$controller/$action/$id'] = array();
+// temporary redirect routes.
+$map['/test/test/test'] = array('location' => '/500.html');
+$map['/test/test/test/test1'] = array('location' => '/404.html');
+$map['/test/test/test/test2'] = array('location' => '/admin/login');
 
-// globbing route for any path, specifying *[string] as part of a rule like
-$map['*path'] = array('controller' => 'page', 'action' => 'any_path');
-$map['*'] = array('controller' => 'page', 'action' => 'anything');
+$map['/blog/:id'] = array('controller' => 'admin', 'action' => 'test', 'id' => '/\d{1,}/');
 
-Router :: map($map);
+// default route.
+$map['/:controller/:action/:id'] = array();
+
+
+// globbing route, gracefully handle badly formed requests.
+$map['/:controller/:action/:id/*others'] = array();
+$map['*path'] = array('controller' => 'application', 'action' => 'action_missing', 'status' => 404);
 ?>

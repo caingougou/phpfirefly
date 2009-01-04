@@ -1,6 +1,4 @@
 <?php
-defined('SESSION_STORE_STRATEGY') ? null : define('SESSION_STORE_STRATEGY', 0);
-
 class Controller {
 	public $params;
 	public $helper;
@@ -8,7 +6,6 @@ class Controller {
 	public $logger;
 	public $request;
 	public $response;
-	public $session;
 	public $default_template;
 	public $layout = false;
 	public $auto_render = true;
@@ -17,7 +14,6 @@ class Controller {
 
 	public function __construct() {
 		$this->logger = new Logger;
-		$this->session = Session :: factory(SESSION_STORE_STRATEGY);
 		$this->template_root = FIREFLY_APP_DIR . DS . 'views' . DS;
 
 		if(is_subclass_of($this, 'ApplicationController')) {
@@ -25,7 +21,7 @@ class Controller {
 			if(!is_array($this->helper)) {
 				$this->helper = array($this->helper);
 			}
-			if(isset($application_vars['helper']) && !empty($application_vars['helper'])) {
+			if(!empty($application_vars['helper'])) {
 				$diff = array_diff($application_vars['helper'], $this->helper);
 				$this->helper = array_merge($this->helper, $diff);
 			}
@@ -64,8 +60,8 @@ class Controller {
 	public function after_filter() {
 	}
 
-	public function method_missing($params) {
-		$this->render(array('template' => FIREFLY_LIB_DIR . DS . 'view' . DS . 'method_missing.php'));
+	public function action_missing() {
+		$this->render(array('file' => FIREFLY_LIB_DIR . DS . 'view' . DS . 'action_missing.php'));
 	}
 
 	public function __toString() {
@@ -213,10 +209,11 @@ class Controller {
 	}
 
 	private function render_for_file($file, $options = array()) {
-		if(file_exists($file)) {
+		$this->info($file, __FILE__, __LINE__);
+		if(file_exists($file) && preg_match('/^' . preg_quote(FIREFLY_BASE_DIR, '/') . '/', $file)) {
 			$this->response->template = $file;
 		} else {
-			$this->response->content = 'Template: "' . $options['template'] . '" does not exists!';
+			$this->response->content = 'Template: "' . $options['template'] . '" is not exists!';
 		}
 		$this->pick_layout($options);
 	}
@@ -227,7 +224,7 @@ class Controller {
 
 	/**
 	 * chooses between file, template, action and text depending on
-	 * whether there is a leading slash (file),
+	 * whether there is a leading slash (file and file must under FIREFLY_APP_DIR),
 	 * or an embedded slash (template),
 	 * or no slash and no white space at all in what’s to be rendered (action),
 	 * or render as string (text).
@@ -267,11 +264,13 @@ class Controller {
 	}
 
 	private function find_template($action_name, $partial = false) {
+		pr($action_name);
 		if($action_name === true) {
 			return $this->default_template;
 		} else {
 			if($pos = strpos($action_name, '/')) {
 				// controller/_action.php
+				// TODO: other_prefix_path/controller/_action
 				if($partial) {
 					$action_name = substr($action_name, 0, $pos +1) . '_' . substr($action_name, $pos +1);
 				}
@@ -288,7 +287,7 @@ class Controller {
 
 	private function set_response_assigns($locals) {
 		$vars = array_merge(get_object_vars($this), $locals);
-		$vars['response'] = null;
+		unset($vars['response']);
 		$this->response->assigns = $vars;
 	}
 

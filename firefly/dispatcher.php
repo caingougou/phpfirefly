@@ -1,4 +1,10 @@
 <?php
+// globals functions, will be removed.
+include_once(FIREFLY_LIB_DIR . DS . 'functions.php');
+
+include_once(FIREFLY_LIB_DIR . DS . 'router.php');
+include_once(FIREFLY_LIB_DIR . DS . 'controller' . DS . 'controller.php');
+
 class Dispatcher {
 	private $request;
 	private $response;
@@ -12,6 +18,8 @@ class Dispatcher {
 	}
 
 	private function process() {
+		defined('SESSION_STORE_STRATEGY') ? null : define('SESSION_STORE_STRATEGY', 'default');
+		Session :: start(SESSION_STORE_STRATEGY);
 		// parse router and request
 		$this->params = $this->request->parameters();
 
@@ -43,7 +51,7 @@ class Dispatcher {
 		elseif(file_exists(FIREFLY_APP_DIR . DS . 'views' . DS . $this->params['controller'] . DS . $this->params['action'] . '.php')) {
 			$this->controller->render(FIREFLY_APP_DIR . DS . 'views' . DS . $this->params['controller'] . DS . $this->params['action'] . '.php');
 		} else {
-			call_user_func_array(array($this->controller, 'method_missing'), $this->params);
+			call_user_func(array($this->controller, 'action_missing'));
 		}
 
 		if($this->controller->auto_render) {

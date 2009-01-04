@@ -1,9 +1,11 @@
 <?php
 class Resources {
 	private $map = array();
+	private $route_set;
 
-	public function __construct($map) {
-		$this->map = $map;
+	public function __construct($route_set, $path, $value) {
+		$this->route_set = $route_set;
+		$this->map = $value;
 //		pr($map);
 	}
 

@@ -51,7 +51,7 @@ class Logger {
 	private function log_start($level) {
 		if(LOG_LOCATION == 'page') {
 			if($level == 'debug') {
-				echo '<div onclick="javascript:(function(div){div.childNodes[2].style.display=(div.childNodes[2].style.display==\'block\'?\'none\':\'block\')})(this);"><a href="#">debug</a><br />';
+				echo '<div><a href="#" onclick="javascript:(function(elem){elem.childNodes[2].style.display=(elem.childNodes[2].style.display==\'block\'?\'none\':\'block\')})(this.parentNode);">debug</a><br />';
 				echo '<div style="white-space:pre; display:none; color:magenta; border:#ddd 1px solid;">';
 			} else {
 				echo '<div style="color:red; font-weight:bold;"><div>';

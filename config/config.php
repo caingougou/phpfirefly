@@ -7,5 +7,5 @@ define('LOG_LOCATION', 'page'); // append logs to: file, page.
 
 define('ENVIRONMENT', 'development'); // current environment: development, test and production
 
-define('SESSION_STORE_STRATEGY', 'default'); //session store: default, db, memcache
+define('SESSION_STORE_STRATEGY', 'default'); //session store: default, db, memcached, none
 ?>
