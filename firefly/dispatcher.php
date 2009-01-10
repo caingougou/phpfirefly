@@ -54,7 +54,7 @@ class Dispatcher {
 			call_user_func(array($this->controller, 'action_missing'));
 		}
 
-		if($this->controller->auto_render) {
+		if($this->controller->rendered === false) {
 			$this->controller->render();
 		}
 	}

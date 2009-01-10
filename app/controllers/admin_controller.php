@@ -5,6 +5,33 @@ class AdminController extends ApplicationController {
 	}
 
 	public function login() {
+		$path = 'test/test/?test=1#test';
+		$path = preg_replace('/\/*(\?|\z)/', '/\1', $path, 1);
+		pr($path);
+		$path = 'test/test?test=1#test';
+		$path = preg_replace('/\/*(\?|\z)/', '/\1', $path, 1);
+		pr($path);
+		$path = 'test/test/';
+		$path = preg_replace('/\/*(\?|\z)/', '/\1', $path, 1);
+		pr($path);
+		$path = 'test/test';
+		$path = preg_replace('/\/*(\?|\z)/', '/\1', $path, 1);
+		pr($path);
+		$url = Router :: url_for(array (
+			'controller' => 'test',
+			'action' => 'index',
+			'protocol' => 'https',
+			'port' => 3000,
+			'trailing_slash' => true,
+			'only_path' => false,
+			'anchor' => 'test',
+			'other' => 1,
+			'page' => 2,
+			'per_page' => 10
+		));
+		pr($url);
+		$rs = RouteSet :: singleton();
+		pr($rs->get_named_routes());
 		$_SESSION['user'] = 'test';
 	}
 

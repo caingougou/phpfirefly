@@ -8,7 +8,7 @@ class Controller {
 	public $response;
 	public $default_template;
 	public $layout = false;
-	public $auto_render = true;
+	public $rendered = false;
 
 	private $template_root;
 
@@ -140,7 +140,7 @@ class Controller {
 		$this->layout = $this->params['controller'];
 		$this->default_template = FIREFLY_APP_DIR . DS . 'views' . DS . $this->params['controller'] . DS . $this->params['action'] . '.php';
 		$options = $this->parse_render_options($options);
-		$this->auto_render = false;
+		$this->rendered = true;
 		$this->before_render();
 		$this->render_action($options);
 		$this->after_render();
@@ -259,7 +259,7 @@ class Controller {
 		if(empty($options['locals']) || !is_array($options['locals'])) {
 			$options['locals'] = array();
 		}
-		$this->set_response_assigns($options['locals']);
+		$this->response->set_assigns($this, $options['locals']);
 		return $options;
 	}
 
@@ -283,12 +283,6 @@ class Controller {
 				return $this->template_root . $this->params['controller'] . DS . $action_name . '.php';
 			}
 		}
-	}
-
-	private function set_response_assigns($locals) {
-		$vars = array_merge(get_object_vars($this), $locals);
-		unset($vars['response']);
-		$this->response->assigns = $vars;
 	}
 
 	private function pick_layout($options) {

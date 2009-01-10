@@ -1,36 +1,46 @@
 <?php
 class RouteSet {
-	private $map = array();
+	private static $instance = null;
+	private $map = array ();
 	private $configure_file;
 
-	public $routes = array();
-	public $named_routes = array();
-	public $available_controllers = array();
+	public $routes = array ();
+	public $named_routes = array ();
+	public $available_controllers = array ();
 
-	public function __construct() {
+	private function __construct() {
 		$routes_configure_file = FIREFLY_BASE_DIR . DS . 'config' . DS . 'routes.php';
 		$this->load($routes_configure_file);
 		$this->available_controllers = Router :: available_controllers();
 	}
 
-	public function add($path, $route = array()) {
-		if(empty($route['controller'])) {
+	public static function singleton() {
+		if (self :: $instance == null) {
+			self :: $instance = new RouteSet;
+		}
+		return self :: $instance;
+	}
+
+	public function add($path, $route = array ()) {
+		if (empty ($route['controller'])) {
 			throw new FireflyException('please specified controller name in route');
 		}
 		$this->map[$path] = $route;
 	}
 
 	public function clear() {
-		$this->map = array();
+		$this->map = array ();
 	}
 
 	public function load($routes_configure_file) {
 		$this->configure_file = $routes_configure_file;
 		// default route, can be overrided in config/routes.php
-		$map = array();
-		$map['/:controller/:action/:id'] = array();
-		$map['*path'] = array('location' => '/404.html');
-		if(include($this->configure_file)) {
+		$map = array ();
+		$map['/:controller/:action/:id'] = array ();
+		$map['*path'] = array (
+			'location' => '/404.html'
+		);
+		if (include ($this->configure_file)) {
 			$this->map = $map;
 		} else {
 			throw new FireflyException($this->configure_file . ' is not exists!');
@@ -47,14 +57,72 @@ class RouteSet {
 
 	/**
 	 * route options convert to firefly path
+	* $this->generate(array('controller' => 'user','action' => 'list','id' => '12'));
+	* Produces: /user/list/12
+	*/
+	public function generate($options = array ()) {
+		// TODO: routes cached, and find which route rule in $map
+		$cache_key = md5(serialize($options));
+		if (!isset ($this->routes[$cache_key])) {
+			if (isset ($options['use_route'])) {
+				$named_route_name = $options['use_route'];
+				unset ($options['use_route']);
+				$options = array_merge($this->map[$named_route_name], $options);
+			}
+			$options = $this->options_as_params($options);
+			$prefix = isset ($options['prefix']) ? '/' . $options['prefix'] : '';
+			$controller = $options['controller'];
+			$action = $options['action'];
+			$id = isset ($options['id']) ? $options['id'] : '';
+			$path = implode('/', array (
+				$prefix,
+				$controller,
+				$action,
+				$id
+			));
+			$this->routes[$cache_key] = $this->append_query_string($path, $options);
+		}
+		return $this->routes[$cache_key];
+	}
+
+	/**
+	 * Generate the query string with any extra keys in the $options and append it to the given path, returning the new path.
 	 */
-	public function generate($options = array()) {
-		return $this->url_for($options);
+	public function append_query_string($path, $options) {
+		foreach (array (
+				'controller',
+				'action',
+				'id',
+				'use_route',
+				'prefix'
+			) as $k) {
+			if (isset ($options[$k])) {
+				unset ($options[$k]);
+			}
+		}
+		return $path . $this->build_query_string($options);
+	}
+
+	// Build a query string from the keys of the given $options.
+	public function build_query_string($options) {
+		$elem = array ();
+		foreach ($options as $key => $value) {
+			$elem[] = $this->to_query($key, $value);
+		}
+		if (empty ($elem)) {
+			return '';
+		} else {
+			return '?' . implode('&', $elem);
+		}
+	}
+
+	public function to_query($key, $value) {
+		return urlencode($key) . '=' . urlencode($value);
 	}
 
 	public function recognize_controller($request) {
 		$params = $this->recognize_path($request->path);
-		if($params) {
+		if ($params) {
 			return $params['controller'];
 		} else {
 			return false;
@@ -65,7 +133,7 @@ class RouteSet {
 
 	}
 
-	public function routes_for($options = array()) {
+	public function routes_for($options = array ()) {
 
 	}
 
@@ -86,44 +154,29 @@ class RouteSet {
 	}
 
 	public function get_named_routes() {
-		return array();
+		foreach ($this->map as $key => $options) {
+			if ($key != 'resources' && preg_match('/^\w+$/', $key)) {
+				$this->named_routes[$key] = $options;
+			}
+		}
+		return $this->named_routes;
 	}
 
 	public function get_resources() {
-		return array();
+		return $this->map['resources'];
 	}
 
-	/**
-	* Router::url_for(array('controller' => 'user','action' => 'list','id' => '12'));
-	* Produces: /user/list/12
-	*/
-	public function url_for($params = array()) {
-		// TODO: routes cached
-		$cache_key = md5(serialize($params));
-		if(!isset($routes[$cache_key])) {
-			$parsed = isset($params['prefix']) ? '/' . $params['prefix'] : '';
-			$parsed .= '/' . $params['controller_name'] . '/' . $params['action_name'];
-			$parsed .= isset($params['id']) ? '/' . $params['id'] : '';
-			$routes[$cache_key] = $parsed;
-		}
-		return $routes[$cache_key];
-	}
-
-	/**
-	 * http://yuweijun.blogspot.com/2007/08/rails-routes.html
-	 * This function must return array() in case of no rule is found for selected URL
-	 */
 	public function recognize_path($path) {
 		$path = Router :: normalize_path($path);
-		foreach($this->map as $key => $options) {
-			pr($key);
-			if($key == 'resources') {
+		foreach ($this->map as $key => $options) {
+			//			pr($key);
+			if ($key == 'resources') {
 				// TODO
 				// resources route parse
 				$resources = new Resources($this, $path, $options);
 				$params = $resources->parse();
 			}
-			elseif(preg_match('/^\w+$/', $key)) {
+			elseif (preg_match('/^\w+$/', $key)) {
 				// named route
 				$params = $this->named_route($path, $key, $options);
 			} else {
@@ -131,33 +184,16 @@ class RouteSet {
 				$params = $this->routing($path, $key, $options);
 			}
 
-			if($params) {
-				return $this->check_params($params);
+			if ($params) {
+				// append defaults parameters to params, and remove 'defaults' and 'conditions' from $params.
+				$params = array_merge($params, $this->default_params($params));
+				unset ($params['conditions']);
+				unset ($params['defaults']);
+				// FIXME: maybe defaults params should be overrided by $_REQUEST params.
+				return $params;
 			}
 		}
-		return array();
-	}
-
-	public function check_params($params) {
-		//		pr($params);
-		if(empty($params['controller'])) {
-			if(isset($params['location'])) {
-				// temporary redirect route
-				header("Location: " . $params['location']);
-			} else {
-				throw new FireflyException('No controller setting in route config');
-			}
-		}
-		if(in_array($params['controller'], $this->available_controllers)) {
-			// append defaults parameters to params, and remove 'defaults' and 'conditions' from $params.
-			$params = array_merge($params, $this->default_params($params));
-			unset($params['conditions']);
-			unset($params['defaults']); // FIXME: maybe defaults params should be overrided by $_REQUEST params.
-			return $params;
-		} else {
-			// non exists controller, skip current route rule.
-			return array();
-		}
+		throw new FireflyException("No route matches '$path' with request method => {$_SERVER['REQUEST_METHOD']}");
 	}
 
 	/**
@@ -165,35 +201,35 @@ class RouteSet {
 	 * else return false
 	 */
 	public function routing($path, $key, $options) {
-		$params = array();
+		$params = array ();
 		$key = Router :: normalize_path($key);
 		$key_segments = explode('/', $key);
 		$path_segments = explode('/', $path);
 
 		// filter: $key_segments size >= $path_segments size && not glob route.
-		if(substr_count($key, '/') < substr_count($path, '/') && strpos($key, '*') === false) {
+		if (substr_count($key, '/') < substr_count($path, '/') && strpos($key, '*') === false) {
 			return false;
 		}
 		// TODO: resources prefix when nested resources.
-		foreach($key_segments as $k => $key_segment) {
+		foreach ($key_segments as $k => $key_segment) {
 			$path_segment = $path_segments[$k];
-			if($path_segment == $key_segment) {
+			if ($path_segment == $key_segment) {
 				continue;
 			}
-			elseif(strpos($key_segment, ':') === 0) {
+			elseif (strpos($key_segment, ':') === 0) {
 				$symbol = substr($key_segment, 1);
 				$symbol_param = $this->parse_symbol_options($symbol, $options, $path_segment);
-				if($symbol_param === false) {
+				if ($symbol_param === false) {
 					return false;
 				}
-				elseif(is_array($symbol_param)) {
+				elseif (is_array($symbol_param)) {
 					// path matched conditions route.
 					return $params = array_merge($params, $symbol_param);
 				} else {
 					$params[$symbol] = $symbol_param;
 				}
 			}
-			elseif(strpos($key_segment, '*') === 0) {
+			elseif (strpos($key_segment, '*') === 0) {
 				// glob route parsing
 				$symbol = substr($key_segment, 1);
 				$params[$symbol] = implode('/', array_slice($path_segments, $k));
@@ -201,14 +237,31 @@ class RouteSet {
 				return false;
 			}
 		}
-		return array_merge($options, $params);
+		return $this->check_params(array_merge($options, $params));
+	}
+
+	public function check_params($params) {
+		if (empty ($params['controller'])) {
+			if (isset ($params['location'])) {
+				// temporary redirect route for test
+				header("Location: " . $params['location']);
+			} else {
+				throw new FireflyException('No controller setting in route config');
+			}
+		}
+		elseif (in_array($params['controller'], $this->available_controllers)) {
+			return $params;
+		} else {
+			// non exists controller, skip current route rule.
+			return false;
+		}
 	}
 
 	public function parse_symbol_options($symbol, $options, $path_segment) {
-		if(isset($options[$symbol])) {
+		if (isset ($options[$symbol])) {
 			return $this->parse_symbol($symbol, $options, $path_segment);
 		}
-		elseif(isset($options[0])) {
+		elseif (isset ($options[0])) {
 			// conditions route for http verb request
 			return $this->conditions_route($symbol, $options, $path_segment);
 		} else {
@@ -219,13 +272,13 @@ class RouteSet {
 
 	public function parse_symbol($symbol, $options, $path_segment) {
 		$route_value = $options[$symbol];
-		if(preg_match('/^\w+$/', $route_value)) {
+		if (preg_match('/^\w+$/', $route_value)) {
 			// :controller, :action, :id and other non condition params
 			return $route_value;
 		}
-		elseif($this->match_conditions_regexp($route_value)) {
+		elseif ($this->match_conditions_regexp($route_value)) {
 			// requirements route check
-			if(preg_match($route_value, $path_segment)) {
+			if (preg_match($route_value, $path_segment)) {
 				return $path_segment;
 			} else {
 				return false;
@@ -236,20 +289,22 @@ class RouteSet {
 	}
 
 	public function conditions_route($symbol, $options, $path_segment) {
-		foreach($options as $option) {
-			if(isset($option[$symbol])) {
+		foreach ($options as $option) {
+			if (isset ($option[$symbol])) {
 				$option[$symbol] = $this->parse_symbol($symbol, $option, $path_segment);
-				if($option[$symbol] === false)
+				if ($option[$symbol] === false) {
 					return false;
+				}
 			}
-			if(isset($option['conditions'])) {
-				if(empty($option['conditions']['method'])) {
+			if (isset ($option['conditions'])) {
+				if (empty ($option['conditions']['method'])) {
 					// GET act as default http verb request
 					$option['conditions']['method'] = 'get';
 				}
-				if(strtoupper($_SERVER['REQUEST_METHOD']) == strtoupper($option['conditions']['method'])) {
-					if(empty($option[$symbol]))
+				if (strtoupper($_SERVER['REQUEST_METHOD']) == strtoupper($option['conditions']['method'])) {
+					if (empty ($option[$symbol])) {
 						$option[$symbol] = $path_segment;
+					}
 					return $option;
 				}
 			} else {
@@ -259,22 +314,22 @@ class RouteSet {
 	}
 
 	/**
-	 * $map['logout'] = array('controller' => 'page', 'action' => 'logout');
+	 * $map['logout'] = array('controller' => 'admin', 'action' => 'logout');
 	 */
 	public function named_route($path, $key, $options) {
 		$key = Router :: normalize_path($key);
-		if($path == $key) {
-			return $options;
+		if ($path == $key) {
+			return $this->check_params($options);
 		} else {
 			return false;
 		}
 	}
 
 	public function default_params($options) {
-		if(empty($options['defaults'])) {
-			return array();
+		if (empty ($options['defaults'])) {
+			return array ();
 		}
-		elseif(is_array($options['defaults'])) {
+		elseif (is_array($options['defaults'])) {
 			return $options['defaults'];
 		} else {
 			throw new FireflyException('"defaults" must be array in routes map.');
@@ -286,5 +341,15 @@ class RouteSet {
 		return preg_match($regexp, $route_value);
 	}
 
+	private function options_as_params($options) {
+		if (isset ($options['controller'])) {
+			if (empty ($options['action'])) {
+				$options['action'] = 'index';
+			}
+		} else {
+			throw new FireflyException('Need controller and action in options!');
+		}
+		return $options;
+	}
 }
 ?>
