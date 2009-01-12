@@ -31,7 +31,6 @@ class Router {
 	 * Recursive glob() directory and return matched files.
 	 */
 	public static function recursive_glob($pattern = '*', $path = '') {
-		$path = preg_quote($path, DS); // prevend character '[', ']' etc in $path to cause glob return false
 		$paths = glob($path . '*', GLOB_MARK | GLOB_ONLYDIR | GLOB_NOSORT);
 		$files = glob($path . $pattern, GLOB_NOSORT);
 		foreach ($paths as $path) {
@@ -138,5 +137,25 @@ class Router {
 		return $url;
 	}
 
+	/**
+	 * This method tries to determine if url rewrite is enabled on this server.
+	 */
+	public static function url_rewritable() {
+		$url_rewrite_status = false;
+		if (isset ($_SERVER['REDIRECT_STATUS']) && $_SERVER['REDIRECT_STATUS'] == 200 && isset ($_SERVER['REDIRECT_QUERY_STRING']) && strstr($_SERVER['REDIRECT_QUERY_STRING'], 'fireflypath=')) {
+			$redirect_url = trim($_SERVER['REDIRECT_URL'], '/');
+			$request_path = $_SERVER['REDIRECT_QUERY_STRING'];
+			if (strstr($request_path, $redirect_url)) {
+				$url_rewrite_status = true;
+			}
+		}
+		elseif (function_exists('apache_get_modules')) {
+			$available_modules = apache_get_modules();
+			if (in_array('mod_rewrite', $available_modules)) {
+				$url_rewrite_status = true;
+			}
+		}
+		return $url_rewrite_status;
+	}
 }
 ?>

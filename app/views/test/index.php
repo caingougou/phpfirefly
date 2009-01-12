@@ -6,6 +6,8 @@ pr($action);
 pr($controller_name);
 pr($action_name);
 
-pr($var1);
-pr($var2);
+if (isset ($var1) && isset ($var2)) {
+	pr($var1);
+	pr($var2);
+}
 ?>

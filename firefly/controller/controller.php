@@ -7,45 +7,30 @@ class Controller {
 	public $request;
 	public $response;
 	public $default_template;
-	public $layout = false;
+	public $layout = null;
 	public $rendered = false;
 
 	private $template_root;
 
-	public function __construct() {
-		$this->logger = new Logger;
+	public function __construct($request, $response, $params) {
+		$this->params = $params;
+		$this->request = $request;
+		$this->response = $response;
+		$this->logger = Logger :: singleton();
 		$this->template_root = FIREFLY_APP_DIR . DS . 'views' . DS;
 
-		if(is_subclass_of($this, 'ApplicationController')) {
+		if (is_subclass_of($this, 'ApplicationController')) {
 			$application_vars = get_class_vars('ApplicationController');
-			if(!is_array($this->helper)) {
-				$this->helper = array($this->helper);
+			if (!is_array($this->helper)) {
+				$this->helper = array (
+					$this->helper
+				);
 			}
-			if(!empty($application_vars['helper'])) {
+			if (!empty ($application_vars['helper'])) {
 				$diff = array_diff($application_vars['helper'], $this->helper);
 				$this->helper = array_merge($this->helper, $diff);
 			}
 		}
-	}
-
-	public function debug($object, $file_name = __FILE__, $line = __LINE__) {
-		$this->logger->debug($object, $file_name, $line);
-	}
-
-	public function warn($warn, $file_name = __FILE__, $line = __LINE__) {
-		$this->logger->warn($warn, $file_name, $line);
-	}
-
-	public function info($info, $file_name = __FILE__, $line = __LINE__) {
-		$this->logger->info($info, $file_name, $line);
-	}
-
-	public function redirect_to($url) {
-		$this->response->redirect_to($url);
-	}
-
-	public function send_file($file) {
-		$this->response->send_file($file);
 	}
 
 	public function before_filter() {
@@ -61,7 +46,9 @@ class Controller {
 	}
 
 	public function action_missing() {
-		$this->render(array('file' => FIREFLY_LIB_DIR . DS . 'view' . DS . 'action_missing.php'));
+		$this->render(array (
+			'file' => FIREFLY_LIB_DIR . DS . 'view' . DS . 'action_missing.php'
+		));
 	}
 
 	public function __toString() {
@@ -69,16 +56,22 @@ class Controller {
 	}
 
 	public function __call($method, $args) {
-		$this->warn("$method not in this controller: " . __CLASS__, __FILE__, __LINE__);
+		$this->warn("$method not in this controller: " . get_class($this), __FILE__, __LINE__);
 	}
 
-	public function url_for($info) {
-		// TODO: $info is array('controller' => 'test', 'action' => 'index') or $info is url string.
-		return $info;
+	/**
+	 * Do not override below final functions in inherited classes.
+	 */
+	final public function redirect_to($url) {
+		$this->response->redirect_to($url);
 	}
 
-	public function reset_session() {
-		$this->session->reset();
+	final public function send_file($file) {
+		$this->response->send_file($file);
+	}
+
+	final public function url_for($options) {
+		return Router :: url_for($options);
 	}
 
 	/**
@@ -136,8 +129,8 @@ class Controller {
 	 * $this->render(array('partial' => 'posts/form'));
 	 * $this->render(array('partial' => 'posts/form', 'layout' => 'posts'));
 	 */
-	public function render($options = array()) {
-		$this->layout = $this->params['controller'];
+	final public function render($options = array ()) {
+		$this->layout = is_string($this->layout) ? $this->layout : $this->params['controller'];
 		$this->default_template = FIREFLY_APP_DIR . DS . 'views' . DS . $this->params['controller'] . DS . $this->params['action'] . '.php';
 		$options = $this->parse_render_options($options);
 		$this->rendered = true;
@@ -146,56 +139,56 @@ class Controller {
 		$this->after_render();
 	}
 
-	public function render_action($options) {
-		if(empty($options)) {
+	final public function render_action($options) {
+		if (empty ($options)) {
 			$this->render_for_file($this->default_template);
 		}
-		elseif(isset($options['text'])) {
-			if(isset($options['layout']) && $options['layout']) {
+		elseif (isset ($options['text'])) {
+			if (isset ($options['layout']) && $options['layout']) {
 				$this->pick_layout($options);
 			}
 			$this->render_for_text($options['text']);
 		}
-		elseif(isset($options['file'])) {
+		elseif (isset ($options['file'])) {
 			$this->render_for_file($options['file'], $options);
 		}
-		elseif(isset($options['template'])) {
+		elseif (isset ($options['template'])) {
 			$this->render_for_file($this->find_template($options['template']), $options);
 		}
-		elseif(isset($options['inline'])) {
+		elseif (isset ($options['inline'])) {
 			$this->pick_layout($options);
 			// TODO: render inline php statement
 			$this->render_for_text($options['inline']);
 		}
-		elseif(isset($options['action'])) {
+		elseif (isset ($options['action'])) {
 			$this->render_for_file($this->find_template($options['action']), $options);
 		}
-		elseif(isset($options['xml'])) {
+		elseif (isset ($options['xml'])) {
 			$this->response->set_content_type_by_extension('xml');
 			// TODO: $options['xml'] parse to xml.
 			$this->render_for_text($options['xml']);
 		}
-		elseif(isset($options['js'])) {
+		elseif (isset ($options['js'])) {
 			$this->response->set_content_type_by_extension('js');
 			$this->render_for_text($options['js']);
 		}
-		elseif(isset($options['json'])) {
+		elseif (isset ($options['json'])) {
 			$this->response->set_content_type_by_extension('json');
-			if(isset($options['callback'])) {
+			if (isset ($options['callback'])) {
 				$options['json'] = $options['callback'] . "({$options['json']});";
 			}
 			$this->render_for_text($options['json']);
 		}
-		elseif(isset($options['partial'])) {
+		elseif (isset ($options['partial'])) {
 			$this->render_for_file($this->find_template($options['partial'], true), $options);
 		}
-		elseif(isset($options['update'])) {
+		elseif (isset ($options['update'])) {
 			$this->response->set_content_type_by_extension('js');
 			// TODO: update partial using ajax
 			$this->render_for_text($options['update']);
 		}
-		elseif(isset($options['nothing'])) {
-			if($options['nothing']) {
+		elseif (isset ($options['nothing'])) {
+			if ($options['nothing']) {
 				$this->render_for_text('');
 			} else {
 				$this->render_for_file($this->default_template, $options);
@@ -206,11 +199,13 @@ class Controller {
 
 		$out = $this->response->output();
 		echo $out;
+		$this->debug_controller();
+		$this->logger->output();
 	}
 
-	private function render_for_file($file, $options = array()) {
-		$this->info($file, __FILE__, __LINE__);
-		if(file_exists($file) && preg_match('/^' . preg_quote(FIREFLY_BASE_DIR, '/') . '/', $file)) {
+	final private function render_for_file($file, $options = array ()) {
+		// $this->logger->info($file, __FILE__, __LINE__);
+		if (file_exists($file) && preg_match('/^' . preg_quote(FIREFLY_BASE_DIR, '/') . '/', $file)) {
 			$this->response->template = $file;
 		} else {
 			$this->response->content = 'Template: "' . $options['template'] . '" is not exists!';
@@ -218,7 +213,7 @@ class Controller {
 		$this->pick_layout($options);
 	}
 
-	private function render_for_text($text) {
+	final private function render_for_text($text) {
 		$this->response->content = $text;
 	}
 
@@ -226,58 +221,66 @@ class Controller {
 	 * chooses between file, template, action and text depending on
 	 * whether there is a leading slash (file and file must under FIREFLY_APP_DIR),
 	 * or an embedded slash (template),
-	 * or no slash and no white space at all in whatâ€™s to be rendered (action),
+	 * or no slash and no white space at all in whatÕs to be rendered (action),
 	 * or render as string (text).
 	 */
-	private function parse_render_options($options) {
-		if(!is_array($options)) {
-			if(is_string($options)) {
-				if(substr($options, 0, 1) == '/' && file_exists($options)) {
-					$options = array('file' => $options);
+	final private function parse_render_options($options) {
+		if (!is_array($options)) {
+			if (is_string($options)) {
+				if (substr($options, 0, 1) == '/' && file_exists($options)) {
+					$options = array (
+						'file' => $options
+					);
 				}
-				elseif(strpos($options, '/') > 0 && file_exists($this->template_root . $options . '.php')) {
-					$options = array('template' => $options);
+				elseif (strpos($options, '/') > 0 && file_exists($this->template_root . $options . '.php')) {
+					$options = array (
+						'template' => $options
+					);
 				}
-				elseif(!preg_match('/\s/', $options) && file_exists($this->template_root . $this->params['controller'] . DS . $options . '.php')) {
-					$options = array('action' => $options);
+				elseif (!preg_match('/\s/', $options) && file_exists($this->template_root . $this->params['controller'] . DS . $options . '.php')) {
+					$options = array (
+						'action' => $options
+					);
 				} else {
-					$options = array('text' => $options);
+					$options = array (
+						'text' => $options
+					);
 				}
 			} else {
-				$options = array();
+				$options = array ();
 			}
 		}
-		if($options['content_type']) {
+		if (isset ($options['content_type'])) {
 			$this->response->set_content_type($options['content_type']);
 		}
-		if($options['status']) {
+		if (isset ($options['status'])) {
 			$this->response->set_header_status($options['status']);
 		}
-		if($options['location']) {
+		if (isset ($options['location'])) {
 			$this->response->redirect_to($this->url_for($options['location']));
 		}
-		if(empty($options['locals']) || !is_array($options['locals'])) {
-			$options['locals'] = array();
+		if (empty ($options['locals']) || !is_array($options['locals'])) {
+			$options['locals'] = array ();
 		}
 		$this->response->set_assigns($this, $options['locals']);
 		return $options;
 	}
 
-	private function find_template($action_name, $partial = false) {
-		pr($action_name);
-		if($action_name === true) {
+	final private function find_template($action_name, $partial = false) {
+		// pr($action_name);
+		if ($action_name === true) {
 			return $this->default_template;
 		} else {
-			if($pos = strpos($action_name, '/')) {
+			if ($pos = strpos($action_name, '/')) {
 				// controller/_action.php
 				// TODO: other_prefix_path/controller/_action
-				if($partial) {
+				if ($partial) {
 					$action_name = substr($action_name, 0, $pos +1) . '_' . substr($action_name, $pos +1);
 				}
 				return $this->template_root . $action_name . '.php';
 			} else {
 				// _action.php
-				if($partial) {
+				if ($partial) {
 					$action_name = '_' . $action_name;
 				}
 				return $this->template_root . $this->params['controller'] . DS . $action_name . '.php';
@@ -285,8 +288,8 @@ class Controller {
 		}
 	}
 
-	private function pick_layout($options) {
-		if(isset($options['layout'])) {
+	final private function pick_layout($options) {
+		if (isset ($options['layout'])) {
 			$this->active_layout($options['layout']);
 		} else {
 			$this->active_layout($this->layout, true);
@@ -300,43 +303,46 @@ class Controller {
 	 * layout => $controller_name
 	 * layout => application.php
 	 *
-	 * special: render text, default layout => false.
+	 * special: render text, using default layout => false.
 	 */
-	private function active_layout($layout, $default = false) {
-		if($layout === true) {
+	final private function active_layout($layout, $using_default_layout = false) {
+		if ($layout === true) {
 			$this->find_layout($this->layout, true);
 		}
-		elseif($layout) {
-			$this->find_layout($layout, $default);
+		elseif ($layout) {
+			$this->find_layout($layout, $using_default_layout);
 		}
 	}
 
-	private function layout_location($layout) {
+	final private function layout_location($layout) {
 		return FIREFLY_APP_DIR . DS . 'views' . DS . 'layouts' . DS . $layout . '.php';
 	}
 
 	/**
-	 * if not to find default layout and can not find specific layout
-	 * will trigger an layout missing warning.
+	 * If can not find specific layout, it will trigger a layout missing exception.
 	 */
-	private function find_layout($layout, $default) {
+	final private function find_layout($layout, $using_default_layout) {
 		$file = $this->layout_location($layout);
-		if(!file_exists($file)) {
-			if($default) {
+		if (!file_exists($file)) {
+			if ($using_default_layout) {
 				$file = $this->layout_location($this->layout);
-				if(!file_exists($file)) {
+				if (!file_exists($file)) {
 					$file = $this->layout_location('application');
-					if(!file_exists($file)) {
+					if (!file_exists($file)) {
 						$file = null;
 					}
 				}
 			} else {
-				trigger_error('layout "' . $file . '" is not exists!', E_USER_WARNING);
-				$file = null;
+				throw new FireflyException('Specific layout "<b>' . $layout . '</b>" is not exists!');
 			}
 		}
 		$this->response->layout = $file;
 	}
 
+	final private function debug_controller() {
+		if(DEBUG) {
+			$this->logger->debug($this);
+		}
+	}
 }
 ?>

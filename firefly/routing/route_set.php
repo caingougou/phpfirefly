@@ -32,15 +32,24 @@ class RouteSet {
 		$this->map = array ();
 	}
 
+	/**
+	 * routes map config.
+	 * defaults:	default params append to request params array.
+	 * collection:  for resources routes.
+	 * conditions:  fro http verb request methods(get/post/put/delete).
+	 * resources:	resources name used as key name.
+	 * location:	url for temporary route redirect.
+	 * status:		header status for this route.
+	 * symbol:		symbols in key can be used in array as key name(such as :controller, :action, :id).
+	 */
 	public function load($routes_configure_file) {
 		$this->configure_file = $routes_configure_file;
-		// default route, can be overrided in config/routes.php
 		$map = array ();
-		$map['/:controller/:action/:id'] = array ();
-		$map['*path'] = array (
-			'location' => '/404.html'
-		);
 		if (include ($this->configure_file)) {
+			if (empty ($map['/:controller/:action/:id'])) {
+				// default route, can be overrided in config/routes.php
+				$map['/:controller/:action/:id'] = array ();
+			}
 			$this->map = $map;
 		} else {
 			throw new FireflyException($this->configure_file . ' is not exists!');
@@ -56,12 +65,15 @@ class RouteSet {
 	}
 
 	/**
+	 * TODO: reverse route map.
+	 * $map('/:year/:month/:day', array('controller' => 'posts','action' => 'threads','year' => /\d{4}/) , array('year'=>'/(20){1}\d{2}/','month'=>'/((1)?\d{1,2}){2}/','day'=>'/(([1-3])?\d{1,2}){2}/'));
+	 * $this->generate(array('controller' => 'posts','action' => 'threads','year' => '2005','month' => '10'));
+	 * Produces: /2005/10/
 	 * route options convert to firefly path
-	* $this->generate(array('controller' => 'user','action' => 'list','id' => '12'));
-	* Produces: /user/list/12
-	*/
+	 * $this->generate(array('controller' => 'user','action' => 'list','id' => '12'));
+	 * Produces: /user/list/12
+	 */
 	public function generate($options = array ()) {
-		// TODO: routes cached, and find which route rule in $map
 		$cache_key = md5(serialize($options));
 		if (!isset ($this->routes[$cache_key])) {
 			if (isset ($options['use_route'])) {
@@ -169,7 +181,7 @@ class RouteSet {
 	public function recognize_path($path) {
 		$path = Router :: normalize_path($path);
 		foreach ($this->map as $key => $options) {
-			//			pr($key);
+			// pr($key);
 			if ($key == 'resources') {
 				// TODO
 				// resources route parse
@@ -197,7 +209,7 @@ class RouteSet {
 	}
 
 	/**
-	 * if matched any rule, return $params array()
+	 * If matched any rule, return $params array()
 	 * else return false
 	 */
 	public function routing($path, $key, $options) {
@@ -212,7 +224,7 @@ class RouteSet {
 		}
 		// TODO: resources prefix when nested resources.
 		foreach ($key_segments as $k => $key_segment) {
-			$path_segment = $path_segments[$k];
+			$path_segment = isset ($path_segments[$k]) ? $path_segments[$k] : null;
 			if ($path_segment == $key_segment) {
 				continue;
 			}
@@ -276,7 +288,7 @@ class RouteSet {
 			// :controller, :action, :id and other non condition params
 			return $route_value;
 		}
-		elseif ($this->match_conditions_regexp($route_value)) {
+		elseif ($this->match_requirements_regexp($route_value)) {
 			// requirements route check
 			if (preg_match($route_value, $path_segment)) {
 				return $path_segment;
@@ -336,13 +348,24 @@ class RouteSet {
 		}
 	}
 
-	private function match_conditions_regexp($route_value) {
+	/**
+	 * Check route value whether match requirements regualr expression.
+	 */
+	public function match_requirements_regexp($route_value) {
 		$regexp = '/^\/.+\/[imsxe]*$/';
 		return preg_match($regexp, $route_value);
 	}
 
-	private function options_as_params($options) {
+	/**
+	 * Check controller name and action name in $options.
+	 * If no controller supplied, throw exception.
+	 * If no action supplied, set default action name "index" to $options.
+	 */
+	public function options_as_params($options, $only_current_app = false) {
 		if (isset ($options['controller'])) {
+			if ($only_current_app && !in_array($options['controller'], $this->available_controllers)) {
+				throw new FireflyException('Controller name in options is not avaliable!');
+			}
 			if (empty ($options['action'])) {
 				$options['action'] = 'index';
 			}

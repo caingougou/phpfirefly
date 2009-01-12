@@ -31,7 +31,7 @@ class TestController extends ApplicationController {
 		//if(User::count() == 0) {
 		//$user = new User();
 		//$user->save(array('name' => 'admin', 'password' => md5('admin')));
-		//		$this->info("self", __FILE__, __LINE__);
+		//		$this->logger->info("self", __FILE__, __LINE__);
 		//		$this->redirect_to("/");
 		//		$this->send_file(__FILE__);
 		//		$this->render("test string render");

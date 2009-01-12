@@ -1,10 +1,14 @@
 <?php
 class AdminController extends ApplicationController {
+	public $layout = 'posts';
+
 	public function index() {
 		pr(Router :: available_controllers());
 	}
 
 	public function login() {
+		$this->logger->info(Router :: url_rewritable(), __FILE__, __LINE__);
+		$this->logger->warn(print_r(Router :: available_controllers(), true), __FILE__, __LINE__);
 		$path = 'test/test/?test=1#test';
 		$path = preg_replace('/\/*(\?|\z)/', '/\1', $path, 1);
 		pr($path);
@@ -41,7 +45,6 @@ class AdminController extends ApplicationController {
 	}
 
 	public function test() {
-		//$this->info("self", __FILE__, __LINE__);
 		//$this->redirect_to("/");
 		//$this->send_file(__FILE__);
 		//$this->render("test string render");

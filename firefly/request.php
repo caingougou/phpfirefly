@@ -23,8 +23,9 @@ class Request {
 		return $this->xml_http_request();
 	}
 
-	public function path_parameters() {
-		return Router :: recognize($this);
+	// Return true if the request came from localhost, 127.0.0.1
+	public function local_request() {
+		return ($_SERVER['REMOTE_ADDR'] == '127.0.0.1' && $this->remote_ip() == '127.0.0.1');
 	}
 
 	public function remote_ip() {
@@ -55,6 +56,10 @@ class Request {
 			$params['action'] = 'index';
 		}
 		return $params;
+	}
+
+	public function path_parameters() {
+		return Router :: recognize($this);
 	}
 
 	public function get_format() {

@@ -22,29 +22,24 @@ class Dispatcher {
 		Session :: start(SESSION_STORE_STRATEGY);
 		// parse router and request
 		$this->params = $this->request->parameters();
-
 		$class_name = $this->params['controller'] . "Controller";
-		$this->controller = new $class_name;
-		$this->controller->params = $this->params;
-		$this->controller->request = $this->request;
-		$this->controller->response = $this->response;
+		$this->controller = new $class_name($this->request, $this->response, $this->params);
 
-		// TODO: revoke AOP Interceptor plugins here.
+		// TODO: revoke interceptor plugins here.
 		$this->controller->before_filter();
 		$this->render();
 		$this->controller->after_filter();
-		$this->debug();
 	}
 
+	/**
+	 * if request action exists in controller
+	 * 		invoke controller->action
+	 * else if request action file exists under views folder (for controller clean)
+	 * 		render action file
+	 * else
+	 * 		render method_missing template
+	 */
 	private function render() {
-		/**
-		 * if request action exists in controller
-		 * 		invoke controller->action
-		 * else if request action file exists under views folder (for controller clean)
-		 * 		render action file
-		 * else
-		 * 		render method_missing template
-		 */
 		if(in_array($this->params['action'], get_class_methods(get_class($this->controller)))) {
 			call_user_func(array($this->controller, $this->params['action']));
 		}
@@ -56,12 +51,6 @@ class Dispatcher {
 
 		if($this->controller->rendered === false) {
 			$this->controller->render();
-		}
-	}
-
-	private function debug() {
-		if(DEBUG) {
-			$this->controller->debug($this->controller);
 		}
 	}
 

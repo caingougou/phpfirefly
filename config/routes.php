@@ -1,19 +1,6 @@
 <?php
 
 
-/**
- * routes map config.
- * array_keys list below:
- *
- * controller: 	controller name
- * action:		action name
- * id:			id
- * defaults:	default params append to request params array
- * get/post/put/delete: http restful request methods.
- * resources:	resources name used as key name.
- * variables:	variables in key can be used in array as key name.
- */
-
 // named routes
 $map['root'] = array (
 	'controller' => 'admin'
@@ -45,12 +32,12 @@ $map['resources'] = array (
 ); // nested resources
 
 // regular expressions and parameters for requirements routes.
-$map['/posts/:year/:month/:day'] = array (
+$map['/:year/:month/:day'] = array (
 	'controller' => 'posts',
 	'action' => 'find_by_date',
-	'year' => '/\d{4}/',
-	'month' => '/\d{1,2}/',
-	'day' => '/\d{1,2}/'
+	'year' => '/^\d{4}$/',
+	'month' => '/^\d{0,1,2}$/',
+	'day' => '/^\d{0,1,2}$/'
 );
 
 // you simply append a hash at the end of your mapping to set any default parameters.
@@ -107,7 +94,7 @@ $map['/test/test/test'] = array (
 $map['/test/test/test/test1'] = array (
 	'location' => '/404.html'
 );
-$map['/test/test/test/test2'] = array (
+$map['/login2'] = array (
 	'location' => '/admin/login'
 );
 
@@ -123,5 +110,9 @@ $map['/:controller/:action/:id'] = array ();
 // globbing route, gracefully handle badly formed requests.
 $map['/:controller/:action/:id/*others'] = array ();
 
-//$map['*path'] = array ( 'controller' => 'admin', 'action' => 'test', 'status' => 404 );
+$map['*path'] = array (
+	'controller' => 'admin',
+	'action' => 'test',
+	'status' => 404
+);
 ?>
