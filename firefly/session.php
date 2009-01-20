@@ -2,12 +2,7 @@
 include_once('sessions/session_interface.php');
 
 class Session implements SessionInterface {
-	/**
-	 * Memcache based session.
-	 *
-	 * This class enables saving sessions into a database or memcache.
-	 * This can be usefull for multiple server sites, and to have more control over sessions.
-	 */
+
 	private function __construct() {
 		session_set_save_handler(array(& $this, 'open'), array(& $this, 'close'), array(& $this, 'read'), array(& $this, 'write'), array(& $this, 'destroy'), array(& $this, 'gc'));
 		register_shutdown_function('session_write_close');

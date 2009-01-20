@@ -1,5 +1,11 @@
 <?php
 class SessionMemcached implements SessionInterface {
+	/**
+	 * Memcache based session.
+	 *
+	 * This class enables saving sessions into a database or memcache.
+	 * This can be usefull for multiple server sites, and to have more control over sessions.
+	 */
 	private static $lifetime = 0;
 
 	public static function open() {

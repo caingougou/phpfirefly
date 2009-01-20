@@ -16,7 +16,7 @@ class Controller {
 		$this->params = $params;
 		$this->request = $request;
 		$this->response = $response;
-		$this->logger = Logger :: singleton();
+		$this->logger = Logger :: get_reference();
 		$this->template_root = FIREFLY_APP_DIR . DS . 'views' . DS;
 
 		if (is_subclass_of($this, 'ApplicationController')) {

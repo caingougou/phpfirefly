@@ -1,12 +1,56 @@
 <?php
+
+
+/**
+ * routes configure examples:
+ * named routes
+ * $map['root'] = array ( 'controller' => 'admin' );
+ * $map['login'] = array ( 'controller' => 'admin', 'action' => 'login' );
+ * $map['logout'] = array ( 'controller' => 'admin', 'action' => 'logout' );
+ *
+ * // defining resources and nested resources.
+ * $map['resources'] = array ( 'terms', 'options', 'links',
+ * 	'posts' => array ( 'add' => array ( 'controller' => 'comments', 'action' => 'create_comment' ) ), // named and other narmal route in resources.
+ * 	'users' => array ( 'terms', 'posts' )
+ * 	); // nested resources
+ *
+ * // regular expressions and parameters for requirements routes.
+ * $map['/:year/:month/:day'] = array ( 'controller' => 'posts', 'action' => 'find_by_date', 'year' => '/^\d{4}$/', 'month' => '/^\d{0,2}$/', 'day' => '/^\d{0,2}$/' );
+ *
+ * // you simply append a hash at the end of your mapping to set any default parameters.
+ * $map['/users/posts/:action/:id'] = array ( 'controller' => 'posts', 'id' => '/\d{1,}/', 'defaults' => array ( 'page' => 1, 'numbers' => 30 ) );
+ *
+ * // conditions route for http verb request.
+ * $map['/posts/:id'] = array (
+ * 	array ( 'controller' => 'posts', 'action' => 'show', 'id' => '/\d{1,}/', 'defaults' => array ( 'page' => 1, 'numbers' => 30 ), 'conditions' => array ( 'method' => 'get' ) ),
+ * 	array ( 'controller' => 'posts', 'action' => 'create_comment', 'conditions' => array ( 'method' => 'post' ) ),
+ *  array ( 'controller' => 'posts', 'action' => 'update', 'conditions' => array ( 'method' => 'put' ) ),
+ * 	array ( 'controller' => 'posts', 'action' => 'destroy', 'conditions' => array ( 'method' => 'delete' ) )
+ * );
+ *
+ * // temporary redirect routes.
+ * $map['/test/test/test'] = array ( 'location' => '/500.html' );
+ * $map['/test/test/test/test1'] = array ( 'location' => '/404.html' );
+ * $map['/login2'] = array ( 'location' => '/admin/login' );
+ *
+ * $map['/blog/:id'] = array ( 'controller' => 'admin', 'action' => 'test', 'id' => '/\d{1,}/' );
+ *
+ * // default route.
+ * $map['/:controller/:action/:id'] = array ();
+ *
+ * // globbing route, gracefully handle badly formed requests.
+ * $map['/:controller/:action/:id/*others'] = array ();
+ *
+ * $map['*path'] = array ( 'controller' => 'admin', 'action' => 'test' );
+ */
 class RouteSet {
 	private static $instance = null;
 	private $map = array ();
 	private $configure_file;
 
-	public $routes = array ();
-	public $named_routes = array ();
-	public $available_controllers = array ();
+	private $routes = array ();
+	private $named_routes = array ();
+	private $available_controllers = array ();
 
 	private function __construct() {
 		$routes_configure_file = FIREFLY_BASE_DIR . DS . 'config' . DS . 'routes.php';
@@ -14,7 +58,7 @@ class RouteSet {
 		$this->available_controllers = Router :: available_controllers();
 	}
 
-	public static function singleton() {
+	public static function get_reference() {
 		if (self :: $instance == null) {
 			self :: $instance = new RouteSet;
 		}
@@ -65,9 +109,7 @@ class RouteSet {
 	}
 
 	/**
-	 * TODO: reverse route map.
-	 * $map('/:year/:month/:day', array('controller' => 'posts','action' => 'threads','year' => /\d{4}/) , array('year'=>'/(20){1}\d{2}/','month'=>'/((1)?\d{1,2}){2}/','day'=>'/(([1-3])?\d{1,2}){2}/'));
-	 * $this->generate(array('controller' => 'posts','action' => 'threads','year' => '2005','month' => '10'));
+	 * RouteSet :: getReference()->generate(array('controller' => 'posts','action' => 'threads','year' => '2005','month' => '10'));
 	 * Produces: /2005/10/
 	 * route options convert to firefly path
 	 * $this->generate(array('controller' => 'user','action' => 'list','id' => '12'));
@@ -82,19 +124,40 @@ class RouteSet {
 				$options = array_merge($this->map[$named_route_name], $options);
 			}
 			$options = $this->options_as_params($options);
-			$prefix = isset ($options['prefix']) ? '/' . $options['prefix'] : '';
-			$controller = $options['controller'];
-			$action = $options['action'];
-			$id = isset ($options['id']) ? $options['id'] : '';
-			$path = implode('/', array (
-				$prefix,
-				$controller,
-				$action,
-				$id
-			));
+
+			if (isset ($options['prefix'])) {
+				$prefix = '/' . $options['prefix'];
+				unset ($options['prefix']);
+			} else {
+				$prefix = '';
+			}
+			$routes = $this->routes_by_controller_and_action($options['controller'], $options['action']);
+			$path = $this->assemble_path($options, $routes[0]);
 			$this->routes[$cache_key] = $this->append_query_string($path, $options);
 		}
 		return $this->routes[$cache_key];
+	}
+
+	/**
+	 * Assemble path using selected route and $options.
+	 */
+	public function assemble_path(& $options, $route = '/:controller/:action/:id') {
+		$path = '';
+		$options = $this->options_as_params($options);
+		$key_segments = explode('/', $route);
+		foreach ($key_segments as $key_segment) {
+			if (strpos($key_segment, ':') !== false) {
+				$symbol = substr($key_segment, 1);
+				if (isset ($options[$symbol])) {
+					$path .= '/' . $options[$symbol];
+					unset ($options[$symbol]);
+				}
+			}
+			elseif ($key_segment) {
+				$path .= '/' . $key_segment;
+			}
+		}
+		return $path;
 	}
 
 	/**
@@ -141,16 +204,44 @@ class RouteSet {
 		}
 	}
 
+	/**
+	 * RouteSet :: get_reference()->routes_by_controller("posts")
+	 */
 	public function routes_by_controller($controller) {
-
+		$matched_routes = array ();
+		foreach ($this->map as $route_key => $options) {
+			if ($route_key == 'resources') {
+				// TODO: iterate every array in $options for resources and http verb request
+				if (in_array($controller, $options)) {
+					$matched_routes[] = $route_key;
+				}
+			}
+			elseif (strpos($route_key, ':controller') !== false || in_array($controller, $options)) {
+				$matched_routes[] = $route_key;
+			}
+		}
+		return $matched_routes;
 	}
 
+	/**
+	 * RouteSet :: get_reference()->routes_by_controller_and_action("posts", "index")
+	 */
+	public function routes_by_controller_and_action($controller, $action) {
+		$matched_routes = array ();
+		foreach ($this->routes_by_controller($controller) as $route_key) {
+			if (strpos($route_key, ':action') !== false || in_array($action, $this->map[$route_key])) {
+				$matched_routes[] = $route_key;
+			}
+		}
+		return $matched_routes;
+	}
+
+	/**
+	 * RouteSet :: get_reference()->routes_for(array ( "controller" => "posts", "action" => "find_by_date", "year" => "2009", "month" => "01", "day" => "18", "page" => 1 ))
+	 */
 	public function routes_for($options = array ()) {
-
-	}
-
-	public function routes_for_controller_and_action($controller, $action) {
-
+		$options = $this->options_as_params($options);
+		return $this->routes_by_controller_and_action($options['controller'], $options['action']);
 	}
 
 	public function matches_controller_and_action($controller, $action) {
@@ -178,13 +269,15 @@ class RouteSet {
 		return $this->map['resources'];
 	}
 
+	/**
+	 * RouteSet :: get_reference()->recognize_path("/2009/01/18") #=> array("controller" => "posts", "action" => "find_by_date", "year" => "2009", "month" => "01", "day" => "18")
+	 */
 	public function recognize_path($path) {
 		$path = Router :: normalize_path($path);
 		foreach ($this->map as $key => $options) {
 			// pr($key);
 			if ($key == 'resources') {
-				// TODO
-				// resources route parse
+				// TODO: resources route parse
 				$resources = new Resources($this, $path, $options);
 				$params = $resources->parse();
 			}
@@ -285,7 +378,7 @@ class RouteSet {
 	public function parse_symbol($symbol, $options, $path_segment) {
 		$route_value = $options[$symbol];
 		if (preg_match('/^\w+$/', $route_value)) {
-			// :controller, :action, :id and other non condition params
+			// :controller, :action, :id and other non requirements params
 			return $route_value;
 		}
 		elseif ($this->match_requirements_regexp($route_value)) {

@@ -23,7 +23,7 @@ class Router {
 	private static $controllers = array ();
 
 	public static function recognize($request) {
-		$route_set = RouteSet :: singleton();
+		$route_set = RouteSet :: get_reference();
 		return $route_set->recognize_path($request->path);
 	}
 
@@ -130,7 +130,7 @@ class Router {
 				unset ($options[$k]);
 			}
 		}
-		$route_set = RouteSet :: singleton();
+		$route_set = RouteSet :: get_reference();
 		$path = $route_set->generate($options);
 		$path = $trailing_slash ? preg_replace('/\/*(\?|\z)/', '/\1', $path, 1) : $path;
 		$url .= $path . $anchor;

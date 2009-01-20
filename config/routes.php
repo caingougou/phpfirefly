@@ -36,12 +36,12 @@ $map['/:year/:month/:day'] = array (
 	'controller' => 'posts',
 	'action' => 'find_by_date',
 	'year' => '/^\d{4}$/',
-	'month' => '/^\d{0,1,2}$/',
-	'day' => '/^\d{0,1,2}$/'
+	'month' => '/^\d{0,2}$/',
+	'day' => '/^\d{0,2}$/'
 );
 
 // you simply append a hash at the end of your mapping to set any default parameters.
-$map['/posts/:action/:id'] = array (
+$map['/users/posts/:action/:id'] = array (
 	'controller' => 'posts',
 	'id' => '/\d{1,}/',
 	'defaults' => array (
@@ -112,7 +112,6 @@ $map['/:controller/:action/:id/*others'] = array ();
 
 $map['*path'] = array (
 	'controller' => 'admin',
-	'action' => 'test',
-	'status' => 404
+	'action' => 'test'
 );
 ?>

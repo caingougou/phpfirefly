@@ -12,7 +12,7 @@ class Logger {
 	private function __construct() {
 	}
 
-	public static function singleton() {
+	public static function get_reference() {
 		if (self :: $instance == null) {
 			self :: $instance = new Logger;
 		}

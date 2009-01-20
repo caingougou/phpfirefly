@@ -1,4 +1,6 @@
 <?php
+error_reporting(E_ALL);
+
 define('DEBUG', 1); // 0. production, 1. development.
 
 define('LOG_COLORING', 1); // 0. log disable coloring, 1. log enable coloring.
