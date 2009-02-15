@@ -16,7 +16,7 @@ class Request {
 	* The Prototype Javascript library sends this header with every Ajax request.
 	*/
 	public function xml_http_request() {
-		return !empty ($this->env['HTTP_X_REQUESTED_WITH']) && strstr(strtolower($this->env['HTTP_X_REQUESTED_WITH']), 'xmlhttprequest');
+		return !empty ($_SERVER['HTTP_X_REQUESTED_WITH']) && strstr(strtolower($_SERVER['HTTP_X_REQUESTED_WITH']), 'xmlhttprequest');
 	}
 
 	public function xhr() {

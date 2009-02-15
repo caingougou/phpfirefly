@@ -15,9 +15,9 @@ define('FIREFLY_LIB_DIR', FIREFLY_BASE_DIR . DS . 'firefly');
 define('FIREFLY_APP_DIR', FIREFLY_BASE_DIR . DS . 'app');
 define('APP_ROOT', FIREFLY_BASE_DIR . DS . 'public');
 define('APP_LIB_DIR', FIREFLY_BASE_DIR . DS . 'lib');
-define('FIREFLY_VENDOR_DIR', FIREFLY_BASE_DIR . DS . 'vendor');
+define('FIREFLY_PLUGINS_DIR', FIREFLY_BASE_DIR . DS . 'plugins');
 
-set_include_path(get_include_path() . PATH_SEPARATOR . FIREFLY_LIB_DIR . PATH_SEPARATOR . FIREFLY_VENDOR_DIR);
+set_include_path(get_include_path() . PATH_SEPARATOR . FIREFLY_LIB_DIR . PATH_SEPARATOR . FIREFLY_PLUGINS_DIR);
 
 /**
  * auto include app controllers/models/helpers class files.
@@ -28,10 +28,6 @@ function __autoload($class_name) {
 		// include app controllers
 		// TODO: module controllers include (example: controllers/module/test_controller.php).
 		include_once (FIREFLY_APP_DIR . DS . 'controllers' . DS . strtolower(str_replace('Controller', '', $class_name)) . '_controller.php');
-	}
-	elseif (preg_match('/\w+Helper$/', $class_name)) {
-		// include app helers
-		include_once (FIREFLY_APP_DIR . DS . 'helpers' . DS . strtolower(str_replace('Helper', '', $class_name)) . '_helper.php');
 	}
 	elseif (file_exists(FIREFLY_APP_DIR . DS . 'models' . DS . strtolower($class_name) . '.php')) {
 		// include app models

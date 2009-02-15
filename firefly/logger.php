@@ -1,15 +1,16 @@
 <?php
-defined('DEBUG') ? null : define('DEBUG', 0);
-defined('DEBUG_LEVEL') ? null : define('DEBUG_LEVEL', 'info');
-defined('LOG_COLORING') ? null : defined('LOG_COLORING', 1);
-defined('LOG_LOCATION') ? null : define("LOG_LOCATION", 'file');
-defined('ENVIRONMENT') ? null : define('ENVIRONMENT', 'development');
-
 class Logger {
 	private static $logs = array ();
 	private static $instance;
 
 	private function __construct() {
+		defined('DEBUG') ? null : define('DEBUG', 0);
+		defined('DEBUG_LEVEL') ? null : define('DEBUG_LEVEL', 'debug');
+		defined('LOG_COLORING') ? null : defined('LOG_COLORING', 1);
+		defined('LOG_LOCATION') ? null : define("LOG_LOCATION", 'file');
+		defined('ENVIRONMENT') ? null : define('ENVIRONMENT', 'development');
+		defined('FLASH_MESSAGE') ? null : define('FLASH_MESSAGE', 0);
+		defined('SESSION_STORE_STRATEGY') ? null : define('SESSION_STORE_STRATEGY', 'default');
 	}
 
 	public static function get_reference() {
@@ -70,58 +71,41 @@ class Logger {
 	 * $file_name, which file calls logger.
 	 * $line, which line calls logger.
 	 */
-	private function caller($file_name, $line) {
+	private function revoke_from($file_name, $line) {
 		if ($file_name) {
-			echo "Revoke from: " . $file_name;
+			echo "Logger from: " . $file_name;
 		}
 		if ($line) {
 			echo " and line number is: " . $line;
 		}
 	}
 
-	private function log_start($level) {
-		if (LOG_LOCATION == 'page') {
-			if ($level == 'debug') {
-				echo '<div><a href="#" onclick="javascript:(function(elem){elem.childNodes[2].style.display=(elem.childNodes[2].style.display==\'block\'?\'none\':\'block\')})(this.parentNode);">debug</a><br />';
-				echo '<div style="white-space:pre; display:none; color:magenta; border:#ddd 1px solid;">';
-			} else {
-				echo '<div style="color:red; font-weight:bold;"><div>';
-			}
-		}
-	}
-
-	private function log_end($level) {
-		if (LOG_LOCATION == 'page') {
-			echo "</div></div>";
-		}
-	}
-
 	private function dump($object, $file_name, $line) {
 		if (LOG_LOCATION == 'page') {
-			return '<div style="white-space:pre;">' . print_r($object, true) . '</div>';
+			new Debugger($object, false, true);
 		} else {
-			return print_r($object, true);
+			print_r($object);
 		}
 	}
 
 	private function log($level, $msg, $file_name, $line, $color = 'normal') {
 		ob_start();
 		if (DEBUG) {
-			$this->log_start($level);
-			$this->caller($file_name, $line);
+			$this->revoke_from($file_name, $line);
 			if ($level == 'debug') {
-				echo $this->dump($msg, $file_name, $line);
+				echo '<br>debug:';
+				$this->dump($msg, $file_name, $line);
 			} else {
-				echo $level . ': ' . $msg;
+				echo '<br>' . $level . ': ' . $msg . '<br>';
 			}
-			echo "<br/>";
-			$this->log_end($level);
 		}
 		$out = ob_get_clean();
 		if (LOG_LOCATION == 'file') {
 			$out = $this->coloring($out, $color);
 		}
-		self :: $logs[] = array ( $level => $out );
+		self :: $logs[] = array (
+			$level => $out
+		);
 	}
 
 	// 0. log file, 1. append to page footer
@@ -136,7 +120,7 @@ class Logger {
 					$out .= $this->output_warn($log);
 					break;
 				case 'debug' :
-					$out .= $this->output_bug($log);
+					$out .= $this->output_debug($log);
 					break;
 				default :
 					$out .= $this->output_info($log);
@@ -148,9 +132,9 @@ class Logger {
 			// write to log/ENVIRONMENT.log file
 			$filename = FIREFLY_BASE_DIR . DS . 'log' . DS . ENVIRONMENT . '.log';
 			if (is_writable($filename)) {
-				file_put_contents($filename, preg_replace(array('/\s+/', '/<br\/>/'), array('', "\n"), $out), FILE_APPEND | LOCK_EX);
+				file_put_contents($filename, preg_replace(array ( '/\s+/', '/<br>/' ), array ( "", "\n" ), $out), FILE_APPEND | LOCK_EX);
 			} else {
-				echo "The file <b>$filename</b> is not writable!";
+				throw new FireflyException("The file <b>$filename</b> is not writable!");
 			}
 		}
 	}
@@ -160,14 +144,14 @@ class Logger {
 	}
 
 	private function output_error($log) {
-		if (array_key_exists('error', $log)) {
+		if (in_array('error', $log)) {
 			return $log['error'];
 		}
 	}
 
 	private function output_warn($log) {
 		foreach ($log as $k => $v) {
-			if (array_key_exists($k, array ( 'error', 'warn' ))) {
+			if (in_array($k, array ( 'error', 'warn' ))) {
 				return $v;
 			}
 		}
@@ -175,15 +159,15 @@ class Logger {
 
 	private function output_debug($log) {
 		foreach ($log as $k => $v) {
-			if (array_key_exists($k, array ( 'error', 'warn', 'debug' ))) {
-				return $v;
-			}
+			return $v;
 		}
 	}
 
 	private function output_info($log) {
 		foreach ($log as $k => $v) {
-			return $v;
+			if (in_array($k, array ( 'error', 'warn', 'info' ))) {
+				return $v;
+			}
 		}
 	}
 }

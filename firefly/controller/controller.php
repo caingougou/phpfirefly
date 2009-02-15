@@ -1,13 +1,15 @@
 <?php
 class Controller {
+	protected $logger;
+	protected $request;
+	protected $response;
+	protected $layout;
+
+	public $flash;
 	public $params;
 	public $helper;
 	public $page_title;
-	public $logger;
-	public $request;
-	public $response;
 	public $default_template;
-	public $layout = null;
 	public $rendered = false;
 
 	private $template_root;
@@ -16,21 +18,11 @@ class Controller {
 		$this->params = $params;
 		$this->request = $request;
 		$this->response = $response;
+		$this->flash = Flash :: get_reference();
 		$this->logger = Logger :: get_reference();
 		$this->template_root = FIREFLY_APP_DIR . DS . 'views' . DS;
 
-		if (is_subclass_of($this, 'ApplicationController')) {
-			$application_vars = get_class_vars('ApplicationController');
-			if (!is_array($this->helper)) {
-				$this->helper = array (
-					$this->helper
-				);
-			}
-			if (!empty ($application_vars['helper'])) {
-				$diff = array_diff($application_vars['helper'], $this->helper);
-				$this->helper = array_merge($this->helper, $diff);
-			}
-		}
+		$this->include_helpers();
 	}
 
 	public function before_filter() {
@@ -46,9 +38,31 @@ class Controller {
 	}
 
 	public function action_missing() {
-		$this->render(array (
-			'file' => FIREFLY_LIB_DIR . DS . 'view' . DS . 'action_missing.php'
-		));
+		$this->render(array ( 'file' => FIREFLY_LIB_DIR . DS . 'view' . DS . 'action_missing.php' ));
+	}
+
+	/**
+	 * Shows a message to user $pause seconds, then redirects to $url.
+	 * Uses flash_message.php as a layout for the messages.
+	 */
+	function flash_message($message, $url, $pause = 3) {
+		$this->flash->set('message', $message);
+		if (FLASH_MESSAGE) {
+			$file = FIREFLY_APP_DIR . DS . 'views' . DS . $this->params['controller'] . DS . 'flash_message.php';
+			if (!file_exists($file)) {
+				$file = FIREFLY_APP_DIR . DS . 'views' . DS . 'layouts' . DS . 'flash_message.php';
+				if(!file_exists($file)) {
+					$file = FIREFLY_LIB_DIR . DS . 'view' . DS . 'flash_message.php';
+				}
+			}
+			$this->render(array (
+				'file' => $file,
+				'layout' => false,
+				'locals' => array ( 'message' => $message, 'redirect_url' => $url, 'pause' => $pause * 1000 )
+			));
+		} else {
+			$this->redirect_to($url);
+		}
 	}
 
 	public function __toString() {
@@ -62,6 +76,17 @@ class Controller {
 	/**
 	 * Do not override below final functions in inherited classes.
 	 */
+	final public function set($key, $value) {
+		$this->{$key} = $value;
+	}
+
+	/**
+	 * Alias method of $this->flash->set($key, $value)
+	 */
+	final public function flash($key, $value) {
+		$this->flash->set($key, $value);
+	}
+
 	final public function redirect_to($url) {
 		$this->response->redirect_to($url);
 	}
@@ -132,6 +157,7 @@ class Controller {
 	final public function render($options = array ()) {
 		$this->layout = is_string($this->layout) ? $this->layout : $this->params['controller'];
 		$this->default_template = FIREFLY_APP_DIR . DS . 'views' . DS . $this->params['controller'] . DS . $this->params['action'] . '.php';
+		$this->flash_transform();
 		$options = $this->parse_render_options($options);
 		$this->rendered = true;
 		$this->before_render();
@@ -139,7 +165,7 @@ class Controller {
 		$this->after_render();
 	}
 
-	final public function render_action($options) {
+	final private function render_action($options) {
 		if (empty ($options)) {
 			$this->render_for_file($this->default_template);
 		}
@@ -200,7 +226,17 @@ class Controller {
 		$out = $this->response->output();
 		echo $out;
 		$this->debug_controller();
-		$this->logger->output();
+	}
+
+	/**
+	 * Transform Flash object [$this->flash] to array.
+	 */
+	final private function flash_transform() {
+		$flash = array();
+		foreach ( $this->flash->get_keys() as $key ) {
+			$flash[$key] = $this->flash->get($key);
+		}
+		$this->flash = $flash;
 	}
 
 	final private function render_for_file($file, $options = array ()) {
@@ -208,13 +244,14 @@ class Controller {
 		if (file_exists($file) && preg_match('/^' . preg_quote(FIREFLY_BASE_DIR, '/') . '/', $file)) {
 			$this->response->template = $file;
 		} else {
-			$this->response->content = 'Template: "' . $options['template'] . '" is not exists!';
+			$this->response->set_content('Template: "' . $options['template'] . '" is not exists!');
+			// throw new FireflyException('Template: "' . $options['template'] . '" is not exists!');
 		}
 		$this->pick_layout($options);
 	}
 
 	final private function render_for_text($text) {
-		$this->response->content = $text;
+		$this->response->set_content($text);
 	}
 
 	/**
@@ -228,23 +265,15 @@ class Controller {
 		if (!is_array($options)) {
 			if (is_string($options)) {
 				if (substr($options, 0, 1) == '/' && file_exists($options)) {
-					$options = array (
-						'file' => $options
-					);
+					$options = array ( 'file' => $options );
 				}
 				elseif (strpos($options, '/') > 0 && file_exists($this->template_root . $options . '.php')) {
-					$options = array (
-						'template' => $options
-					);
+					$options = array ( 'template' => $options );
 				}
 				elseif (!preg_match('/\s/', $options) && file_exists($this->template_root . $this->params['controller'] . DS . $options . '.php')) {
-					$options = array (
-						'action' => $options
-					);
+					$options = array ( 'action' => $options );
 				} else {
-					$options = array (
-						'text' => $options
-					);
+					$options = array ( 'text' => $options );
 				}
 			} else {
 				$options = array ();
@@ -340,8 +369,46 @@ class Controller {
 	}
 
 	final private function debug_controller() {
-		if(DEBUG) {
-			$this->logger->debug($this);
+		if (DEBUG) {
+			$this->logger->debug($this, __FILE__, __LINE__);
+			$this->logger->debug($_SERVER);
+			$this->logger->output();
+		}
+	}
+
+	final private function include_helpers() {
+		if (is_subclass_of($this, 'ApplicationController')) {
+			$application_vars = get_class_vars('ApplicationController');
+			$this->include_helper($this->params['controller']);
+			$this->include_helper($this->helper);
+			$this->include_helper($application_vars['helper']);
+		}
+	}
+
+	final private function include_helper($helpers) {
+		if ($helpers && !is_array($helpers)) {
+			$this->include_helper_file($helpers);
+		}
+		elseif (is_array($helpers)) {
+			foreach ($helpers as $helper) {
+				$this->include_helper_file($helper);
+			}
+		}
+	}
+
+	final private function include_helper_file($helper_file) {
+		$file_name = strtolower($helper_file) . '_helper.php';
+		$firefly_helpers_path = FIREFLY_LIB_DIR . DS . 'helpers' . DS . $file_name;
+		$app_helers_path = FIREFLY_APP_DIR . DS . 'helers' . DS . $file_name;
+		$plugins_helpers_path = FIREFLY_PLUGINS_DIR . DS . $file_name;
+		if (file_exists($firefly_helpers_path)) {
+			include_once ($firefly_helpers_path);
+		}
+		elseif (file_exists($app_helers_path)) {
+			include_once ($app_helers_path);
+		}
+		elseif (file_exists($plugins_helpers_path)) {
+			include_once ($plugins_helpers_path);
 		}
 	}
 }

@@ -1,5 +1,5 @@
 <?php
-class SessionMemcached implements SessionInterface {
+class MemcachedSession implements InterfaceSession {
 	/**
 	 * Memcache based session.
 	 *
@@ -8,8 +8,14 @@ class SessionMemcached implements SessionInterface {
 	 */
 	private static $lifetime = 0;
 
-	public static function open() {
-		self :: $lifetime = ini_get('session.gc_maxlifetime');
+	private function __construct() {
+		self::$lifetime = ini_get('session.gc_maxlifetime');
+		session_set_save_handler(array(& $this, 'open'), array(& $this, 'close'), array(& $this, 'read'), array(& $this, 'write'), array(& $this, 'destroy'), array(& $this, 'gc'));
+		register_shutdown_function('session_write_close');
+		session_start();
+	}
+
+	public static function open($save_path, $sess_name) {
 		return true;
 	}
 
@@ -18,6 +24,7 @@ class SessionMemcached implements SessionInterface {
 	}
 
 	public static function write($id, $data) {
+		// auto gc
 		return memcached :: set("sessions/{$id}", $data, self :: $lifetime);
 	}
 
@@ -25,10 +32,7 @@ class SessionMemcached implements SessionInterface {
 		return memcached :: delete("sessions/{$id}");
 	}
 
-	private function __construct() {
-	}
-
-	public static function gc() {
+	public static function gc($sess_max_life_time) {
 		return true;
 	}
 

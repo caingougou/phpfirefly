@@ -1,10 +1,11 @@
 <?php
 class Response {
-	public $headers = array ();
-	public $assigns = array ();
+	private $assigns = array ();
+	private $headers = array ();
+	private $content = null;
+
 	public $layout = null;
 	public $template = null;
-	public $content = null;
 
 	public function __construct() {
 	}
@@ -133,6 +134,10 @@ class Response {
 		// header("Cache-control: private"); // fix a bug in IE 6.x
 		$this->set_content_type_by_extension($extension);
 		readfile($file);
+	}
+
+	public function set_content($content) {
+		$this->content = $content;
 	}
 
 	public function set_assigns($controller, $locals) {
