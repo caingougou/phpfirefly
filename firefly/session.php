@@ -3,12 +3,13 @@ include_once ('sessions/interface_session.php');
 
 class Session implements InterfaceSession {
 
-	private $lifetime = 0;
+	private $lifetime = 1440;
 
-	// TODO: session.save_path
-	private static $sess_save_path = "/tmp";
+	// session.save_path, '/tmp' for linux.
+	private static $sess_save_path = '/tmp';
 
 	private function __construct() {
+		self :: $sess_save_path = FIREFLY_BASE_DIR . DS . 'tmp' . DS . 'sessions';
 		$this->lifetime = ini_get('session.gc_maxlifetime');
 		session_set_save_handler(array(& $this, 'open'), array(& $this, 'close'), array(& $this, 'read'), array(& $this, 'write'), array(& $this, 'destroy'), array(& $this, 'gc'));
 		register_shutdown_function('session_write_close');
