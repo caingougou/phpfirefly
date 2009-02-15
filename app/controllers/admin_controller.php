@@ -4,7 +4,6 @@ class AdminController extends ApplicationController {
 	public $helper = array ( 'javascript' );
 
 	public function index() {
-		pr(FIREFLY_BASE_DIR . DS . 'tmp' . DS . 'sessions');
 		$this->flash('test', 'login');
 		$this->flash->set('notice', 'user login!');
 		$this->flash->now('now_msg', 'user messages');
