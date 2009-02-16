@@ -7,6 +7,8 @@ class AdminController extends ApplicationController {
 		$this->flash('test', 'login');
 		$this->flash->set('notice', 'user login!');
 		$this->flash->now('now_msg', 'user messages');
+		$this->action_name = "index of admin controller.";
+//		$this->render(array('partial' => 'test/form'));
 	}
 
 	public function login() {
@@ -16,27 +18,10 @@ class AdminController extends ApplicationController {
 
 		$this->page_title = "user login";
 		$_SESSION['user'] = 'test';
-		$array = array (
-			0 => 'blue',
-			1 => 'red',
-			2 => 'green',
-			3 => 'red',
-			array (
-				4 => 'yello'
-			)
-		);
+		$array = array ( 0 => 'blue', 1 => 'red', 2 => 'green', 3 => 'red', array ( 4 => 'yello' ) );
 
-		$key = array_search('green', $array); // $key = 2;
-		pr($key);
-		$key = array_search('red', $array); // $key = 1;
-		pr($key);
-		$key = array_search('yello', $array); // false;
-		pr($key);
 		$this->test = "test";
 		$this->set('text', 'file');
-		if (isset ($this->helper['txt'])) {
-			pr($this->helper['txt']);
-		}
 	}
 
 	public function logout() {

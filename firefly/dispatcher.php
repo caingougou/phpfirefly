@@ -24,11 +24,10 @@ class Dispatcher {
 		$this->params = $this->request->parameters();
 		$class_name = $this->params['controller'] . "Controller";
 		$this->controller = new $class_name($this->request, $this->response, $this->params);
-
-		// TODO: revoke interceptor plugins here.
 		$this->controller->before_filter();
 		$this->render();
 		$this->controller->after_filter();
+		$this->controller->debug();
 	}
 
 	/**

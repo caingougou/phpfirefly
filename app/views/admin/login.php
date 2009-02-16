@@ -3,6 +3,7 @@
 	echo isset($flash['msg']) ? $flash['msg'] . '<br />' : 'not exists flash msg<br/>';
 	echo $test . '<br/>';
 	echo $text . '<br/>';
+	new Debugger($this->controller, true);
 ?>
 <form action="" method="post" accept-charset="utf-8">
 	<p><input type="text" name="username" value="" /></p>

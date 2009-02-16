@@ -1,5 +1,5 @@
 <?php
-class ViewSmarty {
+class Smarty extends ViewBase {
 
 }
 ?>

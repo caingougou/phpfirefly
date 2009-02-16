@@ -1,17 +1,16 @@
 <?php
 class Response {
-	private $assigns = array ();
 	private $headers = array ();
-	private $content = null;
-
-	public $layout = null;
-	public $template = null;
 
 	public function __construct() {
 	}
 
 	public function add_header($header) {
 		array_push($this->headers, $header);
+	}
+
+	public function get_headers() {
+		return $this->headers;
 	}
 
 	public function set_header_status($status_code) {
@@ -136,41 +135,5 @@ class Response {
 		readfile($file);
 	}
 
-	public function set_content($content) {
-		$this->content = $content;
-	}
-
-	public function set_assigns($controller, $locals) {
-		$vars = array_merge(get_object_vars($controller), $locals);
-		unset ($vars['response']);
-		$this->assigns = $vars;
-	}
-
-	/**
-	 * TODO: plugin views
-	 */
-	public function output() {
-		foreach ($this->headers as $header) {
-			header($header);
-		}
-		extract($this->assigns, EXTR_SKIP);
-		$controller_name = isset ($controller_name) ? $controller_name : $this->assigns['params']['controller'];
-		$action_name = isset ($action_name) ? $action_name : $this->assigns['params']['action'];
-
-		ob_start();
-		if (is_null($this->content)) {
-			include ($this->template);
-		} else {
-			echo $this->content;
-		}
-		$content_for_layout = ob_get_clean();
-		if ($this->layout) {
-			ob_start();
-			include ($this->layout);
-			return ob_get_clean();
-		} else {
-			return $content_for_layout;
-		}
-	}
 }
 ?>

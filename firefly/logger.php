@@ -4,13 +4,6 @@ class Logger {
 	private static $instance;
 
 	private function __construct() {
-		defined('DEBUG') ? null : define('DEBUG', 0);
-		defined('DEBUG_LEVEL') ? null : define('DEBUG_LEVEL', 'debug');
-		defined('LOG_COLORING') ? null : defined('LOG_COLORING', 1);
-		defined('LOG_LOCATION') ? null : define("LOG_LOCATION", 'file');
-		defined('ENVIRONMENT') ? null : define('ENVIRONMENT', 'development');
-		defined('FLASH_MESSAGE') ? null : define('FLASH_MESSAGE', 0);
-		defined('SESSION_STORE_STRATEGY') ? null : define('SESSION_STORE_STRATEGY', 'default');
 	}
 
 	public static function get_reference() {
@@ -40,7 +33,44 @@ class Logger {
 		$this->log(__FUNCTION__, $err, $file_name, $line, "red");
 	}
 
-	public function coloring($text, $color = 'normal') {
+	// 0. log file, 1. append to page footer
+	public function output() {
+		if (DEBUG) {
+			$out = "\n";
+			foreach (self :: $logs as $log) {
+				switch (DEBUG_LEVEL) {
+					case 'error' :
+						$out .= $this->output_error($log);
+						break;
+					case 'warn' :
+						$out .= $this->output_warn($log);
+						break;
+					case 'debug' :
+						$out .= $this->output_debug($log);
+						break;
+					default :
+						$out .= $this->output_info($log);
+				}
+			}
+			if (LOG_LOCATION == 'page') {
+				echo $out;
+			} else {
+				// write to log/ENVIRONMENT.log file
+				$filename = FIREFLY_BASE_DIR . DS . 'log' . DS . ENVIRONMENT . '.log';
+				if (is_writable($filename)) {
+					file_put_contents($filename, preg_replace(array ( '/\s+/', '/<br>/' ), array ( "", "\n" ), $out), FILE_APPEND | LOCK_EX);
+				} else {
+					throw new FireflyException("The file <b>$filename</b> is not writable!");
+				}
+			}
+		}
+	}
+
+	public function send_log() {
+		// send log/ENVIRONMENT.log to admin email.
+	}
+
+	private function coloring($text, $color = 'normal') {
 		if (!LOG_COLORING) {
 			return $text;
 		}
@@ -67,6 +97,12 @@ class Logger {
 		return "\033" . (isset ($colors[$color]) ? $colors[$color] : '[0m') . $text . "\033[0m";
 	}
 
+	private function output_error($log) {
+		if (in_array('error', $log)) {
+			return $log['error'];
+		}
+	}
+
 	/**
 	 * $file_name, which file calls logger.
 	 * $line, which line calls logger.
@@ -89,8 +125,8 @@ class Logger {
 	}
 
 	private function log($level, $msg, $file_name, $line, $color = 'normal') {
-		ob_start();
 		if (DEBUG) {
+			ob_start();
 			$this->revoke_from($file_name, $line);
 			if ($level == 'debug') {
 				echo '<br>debug:';
@@ -98,54 +134,11 @@ class Logger {
 			} else {
 				echo '<br>' . $level . ': ' . $msg . '<br>';
 			}
-		}
-		$out = ob_get_clean();
-		if (LOG_LOCATION == 'file') {
-			$out = $this->coloring($out, $color);
-		}
-		self :: $logs[] = array (
-			$level => $out
-		);
-	}
-
-	// 0. log file, 1. append to page footer
-	public function output() {
-		$out = "\n";
-		foreach (self :: $logs as $log) {
-			switch (DEBUG_LEVEL) {
-				case 'error' :
-					$out .= $this->output_error($log);
-					break;
-				case 'warn' :
-					$out .= $this->output_warn($log);
-					break;
-				case 'debug' :
-					$out .= $this->output_debug($log);
-					break;
-				default :
-					$out .= $this->output_info($log);
+			$out = ob_get_clean();
+			if (LOG_LOCATION == 'file') {
+				$out = $this->coloring($out, $color);
 			}
-		}
-		if (LOG_LOCATION == 'page') {
-			echo $out;
-		} else {
-			// write to log/ENVIRONMENT.log file
-			$filename = FIREFLY_BASE_DIR . DS . 'log' . DS . ENVIRONMENT . '.log';
-			if (is_writable($filename)) {
-				file_put_contents($filename, preg_replace(array ( '/\s+/', '/<br>/' ), array ( "", "\n" ), $out), FILE_APPEND | LOCK_EX);
-			} else {
-				throw new FireflyException("The file <b>$filename</b> is not writable!");
-			}
-		}
-	}
-
-	public function send_log() {
-		// send log/ENVIRONMENT.log to admin email.
-	}
-
-	private function output_error($log) {
-		if (in_array('error', $log)) {
-			return $log['error'];
+			self :: $logs[] = array ( $level => $out );
 		}
 	}
 
