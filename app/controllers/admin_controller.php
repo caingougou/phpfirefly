@@ -8,7 +8,7 @@ class AdminController extends ApplicationController {
 		$this->flash->set('notice', 'user login!');
 		$this->flash->now('now_msg', 'user messages');
 		$this->action_name = "index of admin controller.";
-//		$this->render(array('partial' => 'test/form'));
+//		$this->render(array('partial' => 'test/form', 'locals' => array('method' => 'get')));
 	}
 
 	public function login() {

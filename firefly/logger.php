@@ -8,7 +8,8 @@ class Logger {
 
 	public static function get_reference() {
 		if (self :: $instance == null) {
-			self :: $instance = new Logger;
+			$class_name = __CLASS__;
+			self :: $instance = new $class_name;
 		}
 		return self :: $instance;
 	}
@@ -35,7 +36,7 @@ class Logger {
 
 	// 0. log file, 1. append to page footer
 	public function output() {
-		if (DEBUG) {
+		if (DEBUG_LEVEL) {
 			$out = "\n";
 			foreach (self :: $logs as $log) {
 				switch (DEBUG_LEVEL) {
@@ -125,7 +126,7 @@ class Logger {
 	}
 
 	private function log($level, $msg, $file_name, $line, $color = 'normal') {
-		if (DEBUG) {
+		if (DEBUG_LEVEL) {
 			ob_start();
 			$this->revoke_from($file_name, $line);
 			if ($level == 'debug') {

@@ -1,4 +1,6 @@
 <?php
+include_once ('render_options.php');
+
 class Controller {
 	protected $view;
 	protected $logger;
@@ -17,7 +19,6 @@ class Controller {
 	public function __construct($request, $response, $params) {
 		// 0. log disable coloring, 1. log enable coloring.
 		defined('LOG_COLORING') ? null : define('LOG_COLORING', 1);
-		defined('DEBUG') ? null : define('DEBUG', 0);
 		defined('DEBUG_LEVEL') ? null : define('DEBUG_LEVEL', 'debug');
 		defined('LOG_LOCATION') ? null : define("LOG_LOCATION", 'file');
 		defined('ENVIRONMENT') ? null : define('ENVIRONMENT', 'development');
@@ -31,7 +32,7 @@ class Controller {
 		$this->sessions = & $_SESSION;
 		$this->flash = Flash :: get_reference();
 		$this->logger = Logger :: get_reference();
-		$this->view = View :: factory($this, $response, strtolower(VIEW));
+		$this->view = View :: factory($request, $response, $this, strtolower(VIEW));
 		$this->layout = is_string($this->layout) ? $this->layout : $this->params['controller'];
 
 		$this->include_helpers();
@@ -175,18 +176,19 @@ class Controller {
 			$this->view->render($options);
 			$this->after_render();
 		}
-	}
-
-	final public function debug() {
-		if (DEBUG) {
-			$this->logger->debug($this, __FILE__, __LINE__);
-			$this->logger->output();
-		}
+		$this->debug();
 	}
 
 	/**
 	 * Transform Flash object [$this->flash] to array.
 	 */
+	final private function debug() {
+		if (DEBUG_LEVEL) {
+			$this->logger->debug($this, __FILE__, __LINE__);
+			$this->logger->output();
+		}
+	}
+
 	final private function flash_transform() {
 		$flash = array();
 		foreach ( $this->flash->get_keys() as $key ) {

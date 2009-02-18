@@ -9,8 +9,10 @@ class Response {
 		array_push($this->headers, $header);
 	}
 
-	public function get_headers() {
-		return $this->headers;
+	public function send_headers() {
+		foreach ($this->headers as $header) {
+			header($header);
+		}
 	}
 
 	public function set_header_status($status_code) {

@@ -3,6 +3,7 @@
 include_once(FIREFLY_LIB_DIR . DS . 'functions.php');
 
 include_once(FIREFLY_LIB_DIR . DS . 'router.php');
+include_once(FIREFLY_LIB_DIR . DS . 'firefly_exception.php');
 include_once(FIREFLY_LIB_DIR . DS . 'controller' . DS . 'controller.php');
 
 class Dispatcher {
@@ -20,14 +21,12 @@ class Dispatcher {
 	private function process() {
 		defined('SESSION_STORE_STRATEGY') ? null : define('SESSION_STORE_STRATEGY', 'default');
 		Session :: start(SESSION_STORE_STRATEGY);
-		// parse router and request
 		$this->params = $this->request->parameters();
 		$class_name = $this->params['controller'] . "Controller";
 		$this->controller = new $class_name($this->request, $this->response, $this->params);
 		$this->controller->before_filter();
 		$this->render();
 		$this->controller->after_filter();
-		$this->controller->debug();
 	}
 
 	/**

@@ -1,9 +1,7 @@
 <?php
 error_reporting(E_ALL);
 
-define('DEBUG', 1); // 0. no debug, 1. debug.
-
-define('DEBUG_LEVEL', 'debug'); // debug, info, warn, error.
+define('DEBUG_LEVEL', 'debug'); // debug, info, warn, error, null.
 
 define('LOG_LOCATION', 'page'); // file, page.
 
