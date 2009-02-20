@@ -16,7 +16,9 @@ class Session implements InterfaceSession {
 		session_start();
 	}
 
-	public static function start($type = 'default') {
+	public static function start() {
+		defined('SESSION_STORE_STRATEGY') ? null : define('SESSION_STORE_STRATEGY', 'default');
+		$type = SESSION_STORE_STRATEGY;
 		if ($type == 'default') {
 			$classname = __CLASS__;
 			new $classname;

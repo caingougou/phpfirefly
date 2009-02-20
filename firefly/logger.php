@@ -4,6 +4,11 @@ class Logger {
 	private static $instance;
 
 	private function __construct() {
+		// 0. log disable coloring, 1. log enable coloring.
+		defined('LOG_COLORING') ? null : define('LOG_COLORING', 1);
+		defined('DEBUG_LEVEL') ? null : define('DEBUG_LEVEL', 'debug');
+		defined('LOG_LOCATION') ? null : define("LOG_LOCATION", 'file');
+		defined('ENVIRONMENT') ? null : define('ENVIRONMENT', 'development');
 	}
 
 	public static function get_reference() {

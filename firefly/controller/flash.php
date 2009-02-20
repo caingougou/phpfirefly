@@ -2,13 +2,16 @@
 class Flash {
 	private static $instance = null;
 	private $flash = array ();
-	private $keys = array ();
 
 	public static function get_reference() {
 		if (self :: $instance == null) {
 			self :: $instance = new Flash;
 		}
 		return self :: $instance;
+	}
+
+	public function flash_transform() {
+		return $this->flash;
 	}
 
 	private function __construct() {
@@ -59,13 +62,5 @@ class Flash {
 			unset ($_SESSION['flash'][$key]);
 		}
 	}
-
-	/**
-	 * return flash keys.
-	 */
-	public function get_keys() {
-		return array_keys($this->flash);
-	}
-
 }
 ?>

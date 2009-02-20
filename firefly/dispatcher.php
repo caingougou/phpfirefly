@@ -19,8 +19,7 @@ class Dispatcher {
 	}
 
 	private function process() {
-		defined('SESSION_STORE_STRATEGY') ? null : define('SESSION_STORE_STRATEGY', 'default');
-		Session :: start(SESSION_STORE_STRATEGY);
+		Session :: start();
 		$this->params = $this->request->parameters();
 		$class_name = $this->params['controller'] . "Controller";
 		$this->controller = new $class_name($this->request, $this->response, $this->params);
