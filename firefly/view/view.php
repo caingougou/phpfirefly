@@ -3,7 +3,9 @@ include_once ('view_base.php');
 
 class View extends ViewBase {
 
-	public static function factory($request, $response, $controller, $type = 'php') {
+	public static function factory($request, $response, $controller) {
+		defined('VIEW') ? null : define('VIEW', 'php');
+		$type = strtolower(VIEW);
 		if ($type == 'php') {
 			$classname = __CLASS__;
 			return new $classname ($request, $response, $controller);

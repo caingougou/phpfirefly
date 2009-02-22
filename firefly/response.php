@@ -1,6 +1,9 @@
 <?php
+include_once('controller' . DS . 'mime_type.php');
+
 class Response {
-	private $headers = array ();
+	private $headers = array();
+	private $content_type = 'text/html';
 
 	public function __construct() {
 	}
@@ -10,7 +13,7 @@ class Response {
 	}
 
 	public function send_headers() {
-		foreach ($this->headers as $header) {
+		foreach($this->headers as $header) {
 			header($header);
 		}
 	}
@@ -57,56 +60,31 @@ class Response {
 			503 => 'HTTP/1.1 503 Service Unavailable',
 			504 => 'HTTP/1.1 504 Gateway Time-out'
 		);
-		array_push($this->headers, empty ($status_codes[$status_code]) ? false : $status_codes[$status_code]);
+		array_push($this->headers, empty($status_codes[$status_code]) ? false : $status_codes[$status_code]);
 	}
 
 	public function set_content_type($content_type) {
+		$this->content_type = $content_type;
 		array_push($this->headers, 'Content-Type: ' . $content_type);
 	}
 
 	public function set_content_type_by_extension($extension) {
 		$find = false;
-		$content_types = array (
-			'txt' => 'text/plain',
-			'html' => 'text/html',
-			'php' => 'text/html',
-			'css' => 'text/css',
-			'ics' => 'text/calendar',
-			'csv' => 'text/csv',
-			'xml' => 'application/xml',
-			'yml' => 'application/x-yaml',
-			'js' => 'text/javascript',
-			'json' => 'application/json',
-			'rss' => 'application/rss+xml',
-			'atom' => 'application/atom+xml',
-			'pdf' => 'application/pdf',
-			'exe' => 'application/octet-stream',
-			'zip' => 'application/zip',
-			'doc' => 'application/msword',
-			'docx' => 'application/msword',
-			'xls' => 'application/vnd.ms-excel',
-			'xlsx' => 'application/vnd.ms-excel',
-			'ppt' => 'application/vnd.ms-powerpoint',
-			'pptx' => 'application/vnd.ms-powerpoint',
-			'gif' => 'image/gif',
-			'png' => 'image/png',
-			'jpg' => 'image/jpg',
-			'mp3' => 'audio/mpeg',
-			'mpeg' => 'audio/mpeg',
-			'mpg' => 'audio/mpeg',
-			'wav' => 'audio/x-wav',
-			'mov' => 'video/quicktime',
-			'avi' => 'video/x-msvideo'
-		);
-		foreach ($content_types as $key => $value) {
-			if ($extension == $key) {
-				$find = true;
+		foreach(MimeType :: get_mime_types() as $key => $value) {
+			if($extension == $key) {
+				$this->content_type = $value;
 				array_push($this->headers, 'Content-Type: ' . $value);
+				$find = true;
+				break;
 			}
 		}
-		if (!$find) {
+		if(!$find) {
 			array_push($this->headers, 'Content-Type: application/force-download');
 		}
+	}
+
+	public function get_content_type() {
+		return $this->content_type;
 	}
 
 	public function redirect_to($url) {
@@ -114,7 +92,7 @@ class Response {
 	}
 
 	public function send_file($file) {
-		if (!is_file($file)) {
+		if(!is_file($file)) {
 			$this->set_header_status(404);
 			exit;
 		}
@@ -128,11 +106,11 @@ class Response {
 		header('Expires: Thu, 25 Dec 2008 23:17:14 GMT');
 		header('Last-Modified: ' . date('r'));
 		header('Cache-Control: no-store, no-cache, must-revalidate');
+		// header("Cache-control: private"); // fix a bug for IE 6.x
 		header('Content-Description: File Transfer');
 		header('Content-Disposition: attachment; filename=' . $filename . ';');
 		header('Content-Transfer-Encoding: binary');
 		header('Content-Length: ' . $len);
-		// header("Cache-control: private"); // fix a bug in IE 6.x
 		$this->set_content_type_by_extension($extension);
 		readfile($file);
 	}

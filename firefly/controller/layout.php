@@ -8,18 +8,18 @@ class Layout {
 	}
 
 	public static function get_layout($layout, $options) {
-		if (!self :: $instance) {
+		if(!self :: $instance) {
 			$class_name = __CLASS__;
-			self :: $instance = new $class_name ($layout);
+			self :: $instance = new $class_name($layout);
 		}
 		return self :: $instance->pick_layout($options);
 	}
 
 	final private function pick_layout($options) {
-		if (isset ($options['layout'])) {
+		if(isset($options['layout'])) {
 			return $this->active_layout($options['layout']);
 		}
-		elseif (isset ($options['text']) || isset ($options['partial'])) {
+		elseif(isset($options['text']) || isset($options['partial']) || isset($options['update']) || isset($options['json']) || isset($options['nothing']) || isset($options['xml']) || isset($options['js'])) {
 			return $this->active_layout(false);
 		} else {
 			return $this->active_layout($this->layout, true);
@@ -36,10 +36,10 @@ class Layout {
 	 * special: render text, using default layout => false.
 	 */
 	final private function active_layout($layout, $using_default_layout = false) {
-		if ($layout === true) {
+		if($layout === true) {
 			return $this->find_layout($this->layout, true);
 		}
-		elseif ($layout) {
+		elseif($layout) {
 			return $this->find_layout($layout, $using_default_layout);
 		} else {
 			return null;
@@ -47,7 +47,7 @@ class Layout {
 	}
 
 	final private function layout_location($layout) {
-		if (file_exists($layout)) {
+		if(file_exists($layout)) {
 			return $layout;
 		}
 		return FIREFLY_APP_DIR . DS . 'views' . DS . 'layouts' . DS . $layout . '.php';
@@ -58,12 +58,12 @@ class Layout {
 	 */
 	final private function find_layout($layout, $using_default_layout) {
 		$file = $this->layout_location($layout);
-		if (!file_exists($file)) {
-			if ($using_default_layout) {
+		if(!file_exists($file)) {
+			if($using_default_layout) {
 				$file = $this->layout_location($this->layout);
-				if (!file_exists($file)) {
+				if(!file_exists($file)) {
 					$file = $this->layout_location('application');
-					if (!file_exists($file)) {
+					if(!file_exists($file)) {
 						$file = null;
 					}
 				}

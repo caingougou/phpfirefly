@@ -1,5 +1,8 @@
 <?php
+include_once ('render_options.php');
+
 class ViewBase {
+	private $first_render = true;
 	private $request;
 	private $response;
 	private $controller;
@@ -11,7 +14,16 @@ class ViewBase {
 	}
 
 	final public function render($options) {
-		$render_options = new RenderOptions($this->controller);
+		$render_options = new RenderOptions($this->request, $this->response, $this->controller);
+		if ($this->first_render) {
+			// render options from controller.
+			$this->first_render = false;
+		} else {
+			if (empty ($options['layout'])) {
+				// render options from view.
+				$options['layout'] = false;
+			}
+		}
 		$options = $render_options->parse($options);
 		$this->response->send_headers();
 

@@ -4,11 +4,10 @@ class Logger {
 	private static $instance;
 
 	private function __construct() {
-		// 0. log disable coloring, 1. log enable coloring.
-		defined('LOG_COLORING') ? null : define('LOG_COLORING', 1);
-		defined('DEBUG_LEVEL') ? null : define('DEBUG_LEVEL', 'debug');
-		defined('LOG_LOCATION') ? null : define("LOG_LOCATION", 'file');
-		defined('ENVIRONMENT') ? null : define('ENVIRONMENT', 'development');
+		defined('LOG_COLORING') ? null : define('LOG_COLORING', 1); // 0. log disable coloring, 1. log enable coloring.
+		defined('DEBUG_LEVEL') ? null : define('DEBUG_LEVEL', 'debug'); // debug, info, warn, error, null.
+		defined('LOG_LOCATION') ? null : define("LOG_LOCATION", 'page'); // page, file.
+		defined('ENVIRONMENT') ? null : define('ENVIRONMENT', 'development'); // development, production.
 	}
 
 	public static function get_reference() {
@@ -32,7 +31,7 @@ class Logger {
 	}
 
 	public function info($info, $file_name = null, $line = 0) {
-		$this->log(__FUNCTION__, $info, $file_name, $line, "normal");
+		$this->log(__FUNCTION__, $info, $file_name, $line, "brown");
 	}
 
 	public function error($err, $file_name = null, $line = 0) {
@@ -42,7 +41,7 @@ class Logger {
 	// 0. log file, 1. append to page footer
 	public function output() {
 		if (DEBUG_LEVEL) {
-			$out = "\n";
+			$out = "<br>";
 			foreach (self :: $logs as $log) {
 				switch (DEBUG_LEVEL) {
 					case 'error' :
@@ -64,7 +63,7 @@ class Logger {
 				// write to log/ENVIRONMENT.log file
 				$filename = FIREFLY_BASE_DIR . DS . 'log' . DS . ENVIRONMENT . '.log';
 				if (is_writable($filename)) {
-					file_put_contents($filename, preg_replace(array ( '/\s+/', '/<br>/' ), array ( "", "\n" ), $out), FILE_APPEND | LOCK_EX);
+					file_put_contents($filename, preg_replace(array ( '/\s{2,}|\n/', '/<br>/', '/<\/?b>/' ), array ( " ", "\n", "" ), $out), FILE_APPEND | LOCK_EX);
 				} else {
 					throw new FireflyException("The file <b>$filename</b> is not writable!");
 				}
@@ -73,7 +72,7 @@ class Logger {
 	}
 
 	public function send_log() {
-		// send log/ENVIRONMENT.log to admin email.
+		// TODO: send log/ENVIRONMENT.log to admin email.
 	}
 
 	private function coloring($text, $color = 'normal') {
@@ -115,10 +114,10 @@ class Logger {
 	 */
 	private function revoke_from($file_name, $line) {
 		if ($file_name) {
-			echo "Logger from: " . $file_name;
+			echo "Logger from: <b>" . $file_name . "</b>\n";
 		}
 		if ($line) {
-			echo " and line number is: " . $line;
+			echo " and line number is: <b>" . $line . "</b>\n";
 		}
 	}
 
@@ -135,10 +134,10 @@ class Logger {
 			ob_start();
 			$this->revoke_from($file_name, $line);
 			if ($level == 'debug') {
-				echo '<br>debug:';
+				echo '<br><b>debug</b>: ';
 				$this->dump($msg, $file_name, $line);
 			} else {
-				echo '<br>' . $level . ': ' . $msg . '<br>';
+				echo '<br><b>' . $level . '</b>: ' . $msg . '<br>';
 			}
 			$out = ob_get_clean();
 			if (LOG_LOCATION == 'file') {

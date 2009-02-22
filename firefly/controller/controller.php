@@ -1,8 +1,6 @@
 <?php
-include_once ('render_options.php');
-
 class Controller {
-	private $action_rendered = false;
+	private $action_performed = false;
 
 	protected $view;
 	protected $logger;
@@ -19,9 +17,6 @@ class Controller {
 	public $rendered = false;
 
 	public function __construct($request, $response, $params) {
-		defined('FLASH_PAGE') ? null : define('FLASH_PAGE', 0);
-		defined('VIEW') ? null : define('VIEW', 'php');
-
 		$this->params = $params;
 		$this->request = $request;
 		$this->response = $response;
@@ -29,14 +24,14 @@ class Controller {
 		$this->sessions = & $_SESSION;
 		$this->flash = Flash :: get_reference();
 		$this->logger = Logger :: get_reference();
-		$this->view = View :: factory($request, $response, $this, strtolower(VIEW));
+		$this->view = View :: factory($request, $response, $this);
 		$this->layout = is_string($this->layout) ? $this->layout : $this->params['controller'];
 
 		Helpers :: include_helpers($this->params['controller'], $this->helper);
 	}
 
 	public function action_missing() {
-		$this->render(array ( 'file' => FIREFLY_LIB_DIR . DS . 'view' . DS . 'action_missing.php' ));
+		$this->render(array('file' => FIREFLY_LIB_DIR . DS . 'view' . DS . 'action_missing.php'));
 	}
 
 	public function before_filter() {
@@ -56,20 +51,17 @@ class Controller {
 	 * Uses flash_page.php as a layout for the messages.
 	 */
 	protected function flash_page($message, $url, $pause = 3) {
+		defined('FLASH_PAGE') ? null : define('FLASH_PAGE', 0);
 		$this->flash->set('message', $message);
-		if (FLASH_PAGE) {
+		if(FLASH_PAGE) {
 			$file = FIREFLY_APP_DIR . DS . 'views' . DS . $this->params['controller'] . DS . 'flash_page.php';
-			if (!file_exists($file)) {
+			if(!file_exists($file)) {
 				$file = FIREFLY_APP_DIR . DS . 'views' . DS . 'layouts' . DS . 'flash_page.php';
 				if(!file_exists($file)) {
 					$file = FIREFLY_LIB_DIR . DS . 'view' . DS . 'flash_page.php';
 				}
 			}
-			$this->render(array (
-				'file' => $file,
-				'layout' => false,
-				'locals' => array ( 'message' => $message, 'redirect_url' => $url, 'pause' => $pause * 1000 )
-			));
+			$this->render(array('file' => $file, 'layout' => false, 'locals' => array('message' => $message, 'redirect_url' => $url, 'pause' => $pause * 1000)));
 		} else {
 			$this->redirect_to($url);
 		}
@@ -84,7 +76,7 @@ class Controller {
 	}
 
 	/**
-	 * Do not override below final functions in inherited classes.
+	 * Below functions should not be overrided in inherited classes.
 	 */
 	final protected function set($key, $value) {
 		$this->{$key} = $value;
@@ -114,17 +106,17 @@ class Controller {
 	 * text (layout default is false)
 	 * file	(absolute path)
 	 * template (template root app/views/)
-	 * inline
 	 * action
-	 * update (ajax/rjs)
-	 * xml
-	 * js
-	 * json (callback)
+	 * update (ajax, layout default is false)
+	 * xml (layout default is false)
+	 * js (layout default is false)
+	 * json (callback, layout default is false)
 	 * patial (layout default is false)
-	 * nothing
-	 * default
+	 * nothing (layout default is false)
 	 *
 	 * parameters in render options array:
+	 * content_type (render content type)
+	 * format (render content type by extension format)
 	 * status (404/301/200 etc.)
 	 * location (redirect_to)
 	 * locals (must be array, act as view variable)
@@ -139,8 +131,6 @@ class Controller {
 	 * $this->render(array('layout' => false));
 	 * $this->render(array('layout' => 'posts'));
 	 * $this->render(array('layout' => 'not_exists_layout')); // trigger warning
-	 * $this->render(array('inline' => "render $this->action"));
-	 * $this->render(array('inline' => "render $this->action", 'layout' => false));
 	 * $this->render(array('js' => "alert('__METHOD__')"));
 	 * $this->render(array('json' => "{name:'$this->action'}"));
 	 * $this->render(array('json' => "{name:'$this->action'}", 'callback' => 'show'));
@@ -148,9 +138,11 @@ class Controller {
 	 * $this->render(array('nothing' => false));
 	 * $this->render(array('status' => 202));
 	 * $this->render(array('status' => 202, 'layout' => false));
+	 * $this->render(array('text' => "alert('" . __METHOD__ . "');\n", 'format' => 'js'));
 	 * $this->render(array('location' => '/', 'status' => 301)); // move permanently redirection 301
 	 * $this->render(array('locals' => array('var1' => 'locals_var1', 'var2' => 'locals_var2')));
 	 * $this->render(array('file' => '/Users/yu/Sites/phpfirefly/app/views/test/test.php'));
+	 * $this->render(array('update' => array('alert' => 'xxxx', 'hide' => 'test', 'show' => 'test2')));
 	 * $this->render(array('template' => 'posts/index'));
 	 * $this->render(array('template' => 'posts/index2')); // template not exists.
 	 * $this->render(array('action' => 'posts/index'));
@@ -165,24 +157,25 @@ class Controller {
 	 * $this->render(array('partial' => 'posts/form', 'layout' => 'posts'));
 	 * action can render only once, partial is rendered by view can more one time.
 	 */
-	final public function render($options = array ()) {
-		if (!$this->action_rendered) {
-			$this->action_rendered = $this->rendered = true;
+	final public function render($options = array()) {
+		if(!$this->action_performed) {
+			$this->action_performed = $this->rendered = true;
 			$this->flash = $this->flash->flash_transform();
-
 			$this->before_render();
 			$this->view->render($options);
 			$this->after_render();
 		}
-		$this->debug();
+		$this->debug($options);
 	}
 
 	/**
-	 * Transform Flash object [$this->flash] to array.
+	 * Don't output debug messages when action is not rendering text/html content.
 	 */
-	final private function debug() {
-		$this->logger->debug($this, __FILE__, __LINE__);
-		$this->logger->output();
+	final private function debug($options) {
+		if(DEBUG_LEVEL && $this->response->get_content_type() == 'text/html') {
+			$this->logger->debug($this, __FILE__, __LINE__);
+			$this->logger->output();
+		}
 	}
 
 }

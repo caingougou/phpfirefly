@@ -1,5 +1,5 @@
 <?php
-include_once ('routing/route_set.php');
+include_once('routing/route_set.php');
 
 /**
  * The routing module provides URL rewriting.
@@ -20,7 +20,7 @@ include_once ('routing/route_set.php');
  * DELETE Deletion of a resource
  */
 class Router {
-	private static $controllers = array ();
+	private static $controllers = array();
 
 	public static function recognize($request) {
 		$route_set = RouteSet :: get_reference();
@@ -33,7 +33,7 @@ class Router {
 	public static function recursive_glob($pattern = '*', $path = '') {
 		$paths = glob($path . '*', GLOB_MARK | GLOB_ONLYDIR | GLOB_NOSORT);
 		$files = glob($path . $pattern, GLOB_NOSORT);
-		foreach ($paths as $path) {
+		foreach($paths as $path) {
 			$files = array_merge($files, self :: recursive_glob($pattern, $path));
 		}
 		return $files;
@@ -44,10 +44,10 @@ class Router {
 	 */
 	public static function available_controllers() {
 		$app_controllers_path = FIREFLY_APP_DIR . DS . 'controllers';
-		if (empty (self :: $controllers)) {
+		if(empty(self :: $controllers)) {
 			$files = self :: recursive_glob('*_controller.php', $app_controllers_path);
 			$regexp = '/^' . preg_quote($app_controllers_path . DS, DS) . '(.+)_controller.php' . '$/i';
-			foreach ($files as $file) {
+			foreach($files as $file) {
 				array_push(self :: $controllers, preg_replace($regexp, '\1', $file));
 			}
 		}
@@ -63,18 +63,8 @@ class Router {
 	 */
 	public static function normalize_path($path) {
 		// $path = preg_replace('/^\/*(.*?)\/*$/', '/\1', $path);
-		$regexp = array (
-			'/^[\/]?(.)/',
-			'/\/\//',
-			'/(.)[\/]$/',
-			'/[^\/]+[\/]\.\.[\/]/'
-		);
-		$replace = array (
-			'\1',
-			'/',
-			'\1',
-			''
-		);
+		$regexp = array('/^[\/]?(.)/', '/\/\//', '/(.)[\/]$/', '/[^\/]+[\/]\.\.[\/]/');
+		$replace = array('\1', '/', '\1', '');
 		$path = preg_replace($regexp, $replace, $path);
 		return $path;
 	}
@@ -96,38 +86,31 @@ class Router {
 	 * Router :: url_for(array ( 'controller' => 'test', 'action' => 'index', 'protocol' => 'https', 'port' => 3000, 'trailing_slash' => true, 'only_path' => false, 'anchor' => 'test' ))
 	 * #=>"https://www.phpfirefly.com:3000/test/index/#test"
 	 */
-	public static function url_for($options = array ()) {
+	public static function url_for($options = array()) {
 		$url = '';
-		$only_path = isset ($options['only_path']) ? $options['only_path'] : false;
-		if (!$only_path) {
-			if (isset ($options['protocol'])) {
+		$only_path = isset($options['only_path']) ? $options['only_path'] : false;
+		if(!$only_path) {
+			if(isset($options['protocol'])) {
 				$url .= $options['protocol'];
 			} else {
 				$url .= 'http';
 			}
-			if (strpos($url, '://') === false) {
+			if(strpos($url, '://') === false) {
 				$url .= '://';
 			}
-			if (empty ($options['host'])) {
-				$options['host'] = isset ($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
+			if(empty($options['host'])) {
+				$options['host'] = isset($_SERVER['HTTP_HOST']) ? $_SERVER['HTTP_HOST'] : 'localhost';
 			}
 			$url .= $options['host'];
-			if (isset ($options['port']) && is_numeric($options['port'])) {
+			if(isset($options['port']) && is_numeric($options['port'])) {
 				$url .= ':' . $options['port'];
 			}
 		}
-		$trailing_slash = isset ($options['trailing_slash']) ? $options['trailing_slash'] : false;
-		$anchor = isset ($options['anchor']) ? '#' . $options['anchor'] : '';
-		foreach (array (
-				'protocol',
-				'host',
-				'port',
-				'only_path',
-				'trailing_slash',
-				'anchor'
-			) as $k) {
-			if (isset ($options[$k])) {
-				unset ($options[$k]);
+		$trailing_slash = isset($options['trailing_slash']) ? $options['trailing_slash'] : false;
+		$anchor = isset($options['anchor']) ? '#' . $options['anchor'] : '';
+			foreach(array('protocol', 'host', 'port', 'only_path', 'trailing_slash', 'anchor') as $k) {
+			if(isset($options[$k])) {
+				unset($options[$k]);
 			}
 		}
 		$route_set = RouteSet :: get_reference();
@@ -142,16 +125,16 @@ class Router {
 	 */
 	public static function url_rewritable() {
 		$url_rewrite_status = false;
-		if (isset ($_SERVER['REDIRECT_STATUS']) && $_SERVER['REDIRECT_STATUS'] == 200 && isset ($_SERVER['REDIRECT_QUERY_STRING']) && strstr($_SERVER['REDIRECT_QUERY_STRING'], 'fireflypath=')) {
+		if(isset($_SERVER['REDIRECT_STATUS']) && $_SERVER['REDIRECT_STATUS'] == 200 && isset($_SERVER['REDIRECT_QUERY_STRING']) && strstr($_SERVER['REDIRECT_QUERY_STRING'], 'fireflypath=')) {
 			$redirect_url = trim($_SERVER['REDIRECT_URL'], '/');
 			$request_path = $_SERVER['REDIRECT_QUERY_STRING'];
-			if (strstr($request_path, $redirect_url)) {
+			if(strstr($request_path, $redirect_url)) {
 				$url_rewrite_status = true;
 			}
 		}
-		elseif (function_exists('apache_get_modules')) {
+		elseif(function_exists('apache_get_modules')) {
 			$available_modules = apache_get_modules();
-			if (in_array('mod_rewrite', $available_modules)) {
+			if(in_array('mod_rewrite', $available_modules)) {
 				$url_rewrite_status = true;
 			}
 		}
